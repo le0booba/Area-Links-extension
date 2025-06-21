@@ -1,4 +1,4 @@
-# Select and Open Links
+# linkslinkslinks
 
 A Chrome extension that lets you select multiple links on a webpage and open them all at once with a keyboard shortcut.
 
