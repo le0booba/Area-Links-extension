@@ -1,0 +1,7 @@
+.selection-box-by-dev {
+  position: fixed;
+  border: 2px dashed #0d6efd; /* синяя пунктирная рамка */
+  background-color: rgba(13, 110, 253, 0.2); /* полупрозрачный синий фон */
+  z-index: 99999999; /* чтобы рамка была поверх всех элементов */
+  pointer-events: none; /* чтобы рамка не мешала другим событиям мыши */
+}

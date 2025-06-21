@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Выделяй и Открывай Ссылки",
+  "version": "1.0",
+  "description": "Открывает все ссылки в выделенной области (Alt+Z + ЛКМ)",
+  "permissions": [
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["style.css"]
+    }
+  ],
+  "action": {
+    "default_icon": {
+      "16": "icon16.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
