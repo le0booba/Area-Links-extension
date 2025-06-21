@@ -1,53 +1,77 @@
-let isAltZPressed = false;
-let isDrawing = false;
+let isSelectionModeActive = false;
 let selectionBox = null;
 let startX = 0;
 let startY = 0;
+let userSettings = {
+    maxTabs: 15,
+    selectionStyle: 'style-default'
+};
 
-// Отслеживаем нажатие комбинации Alt+Z
-window.addEventListener('keydown', (e) => {
-  if (e.altKey && e.code === 'KeyZ') {
-    isAltZPressed = true;
-    // Меняем курсор, чтобы показать, что режим активен
-    document.body.style.cursor = 'crosshair';
-  }
+// --- Инициализация и загрузка настроек ---
+chrome.storage.sync.get({ maxTabs: 15, selectionStyle: 'style-default' }, (settings) => {
+    userSettings = settings;
 });
 
-// Отслеживаем отпускание клавиш
-window.addEventListener('keyup', (e) => {
-  if (!e.altKey || e.code === 'KeyZ') {
-    isAltZPressed = false;
-    document.body.style.cursor = 'default';
-  }
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'sync') {
+        if (changes.maxTabs) userSettings.maxTabs = changes.maxTabs.newValue;
+        if (changes.selectionStyle) userSettings.selectionStyle = changes.selectionStyle.newValue;
+    }
 });
 
-// Начинаем рисовать при нажатии ЛКМ, если Alt+Z зажаты
-document.addEventListener('mousedown', (e) => {
-  if (isAltZPressed && e.button === 0) { // 0 - левая кнопка мыши
+// --- Логика активации ---
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "toggleSelectionMode") {
+        isSelectionModeActive = !isSelectionModeActive;
+        document.body.style.cursor = isSelectionModeActive ? 'crosshair' : 'default';
+        if (isSelectionModeActive) {
+            document.addEventListener('mousedown', handleMouseDown, { once: true });
+        } else {
+            document.removeEventListener('mousedown', handleMouseDown);
+        }
+    }
+});
+
+// --- Логика рисования ---
+function handleMouseDown(e) {
+    if (!isSelectionModeActive || e.button !== 0) {
+        isSelectionModeActive = false;
+        document.body.style.cursor = 'default';
+        return;
+    }
+    
     e.preventDefault();
-    isDrawing = true;
+    e.stopPropagation();
+
+    // **НОВОЕ ИСПРАВЛЕНИЕ:** Принудительно убираем любое существующее выделение текста.
+    // Это гарантирует, что действие расширения всегда будет иметь приоритет.
+    if (window.getSelection) {
+        window.getSelection().removeAllRanges();
+    } else if (document.selection) { // Для старых версий IE (на всякий случай)
+        document.selection.empty();
+    }
+
+    document.body.style.userSelect = 'none';
+
     startX = e.clientX;
     startY = e.clientY;
 
-    // Создаем рамку выделения
     selectionBox = document.createElement('div');
-    selectionBox.className = 'selection-box-by-dev'; // Уникальный класс
+    selectionBox.className = 'selection-box-by-dev';
+    selectionBox.classList.add(userSettings.selectionStyle);
     document.body.appendChild(selectionBox);
-    
-    // Начальные стили
     selectionBox.style.left = `${startX}px`;
     selectionBox.style.top = `${startY}px`;
-  }
-});
 
-// Рисуем рамку при движении мыши
-document.addEventListener('mousemove', (e) => {
-  if (isDrawing) {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp, { once: true });
+}
+
+function handleMouseMove(e) {
     e.preventDefault();
-    // Рассчитываем размеры и положение рамки
     const currentX = e.clientX;
     const currentY = e.clientY;
-    
+
     const width = Math.abs(currentX - startX);
     const height = Math.abs(currentY - startY);
     const newX = Math.min(currentX, startX);
@@ -57,50 +81,60 @@ document.addEventListener('mousemove', (e) => {
     selectionBox.style.height = `${height}px`;
     selectionBox.style.left = `${newX}px`;
     selectionBox.style.top = `${newY}px`;
-  }
-});
+}
 
-// Завершаем рисование и открываем ссылки, когда отпускаем ЛКМ
-document.addEventListener('mouseup', (e) => {
-  if (isDrawing) {
-    isDrawing = false;
+function handleMouseUp(e) {
+    window.removeEventListener('mousemove', handleMouseMove);
+    document.body.style.userSelect = '';
+    isSelectionModeActive = false;
     document.body.style.cursor = 'default';
-    
-    const rect = selectionBox.getBoundingClientRect();
-    findAndOpenLinks(rect);
-    
-    // Удаляем рамку
-    document.body.removeChild(selectionBox);
-    selectionBox = null;
-    isAltZPressed = false; // Сбрасываем состояние
-  }
-});
 
-function findAndOpenLinks(selectionRect) {
-  const links = document.querySelectorAll('a[href]');
-  const linksToOpen = [];
-
-  for (const link of links) {
-    const linkRect = link.getBoundingClientRect();
-
-    // Проверяем, пересекается ли ссылка с областью выделения
-    const isIntersecting = !(
-      linkRect.right < selectionRect.left ||
-      linkRect.left > selectionRect.right ||
-      linkRect.bottom < selectionRect.top ||
-      linkRect.top > selectionRect.bottom
-    );
-
-    if (isIntersecting) {
-      // Убедимся, что ссылка видима (не имеет display: none)
-      if (link.offsetParent !== null) {
-        linksToOpen.push(link.href);
-      }
+    if (selectionBox) {
+        const rect = selectionBox.getBoundingClientRect();
+        if (rect.width > 5 || rect.height > 5) {
+            findAndProcessLinks(rect);
+        }
+        document.body.removeChild(selectionBox);
+        selectionBox = null;
     }
-  }
+}
 
-  // Отправляем массив ссылок в фоновый скрипт для открытия
-  if (linksToOpen.length > 0) {
-    chrome.runtime.sendMessage({ action: 'openLinks', urls: linksToOpen });
-  }
+// --- Обработка ссылок (без изменений) ---
+function findAndProcessLinks(selectionRect) {
+    const allLinksOnPage = document.querySelectorAll('a[href]');
+    const linksInSelection = [];
+
+    for (const link of allLinksOnPage) {
+        const linkRect = link.getBoundingClientRect();
+        const isIntersecting = !(linkRect.right < selectionRect.left || linkRect.left > selectionRect.right || linkRect.bottom < selectionRect.top || linkRect.top > selectionRect.bottom);
+        if (isIntersecting && link.offsetParent !== null) {
+            linksInSelection.push(link);
+        }
+    }
+
+    linksInSelection.sort((a, b) => {
+        const rectA = a.getBoundingClientRect();
+        const rectB = b.getBoundingClientRect();
+        if (rectA.top !== rectB.top) {
+            return rectA.top - rectB.top;
+        }
+        return rectA.left - rectB.left;
+    });
+
+    const filteredUrls = linksInSelection.map(link => {
+        const url = link.href;
+        if (!url || !url.startsWith('http')) return null;
+        return url;
+    }).filter(url => url !== null);
+
+    const uniqueLinks = [...new Set(filteredUrls)];
+    const limitedLinks = uniqueLinks.slice(0, userSettings.maxTabs);
+
+    if (uniqueLinks.length > limitedLinks.length) {
+        alert(`Found ${uniqueLinks.length} unique links.\nOpening the first ${userSettings.maxTabs} in order, as per your settings.`);
+    }
+
+    if (limitedLinks.length > 0) {
+        chrome.runtime.sendMessage({ action: 'openLinks', urls: limitedLinks });
+    }
 }

@@ -1,10 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Выделяй и Открывай Ссылки",
-  "version": "1.0",
-  "description": "Открывает все ссылки в выделенной области (Alt+Z + ЛКМ)",
+  "name": "Select and Open Links",
+  "version": "1.2",
+  "description": "Opens all links within a selected area using a customizable hotkey.",
   "permissions": [
-    "tabs"
+    "tabs",
+    "storage",
+    "activeTab"
   ],
   "background": {
     "service_worker": "background.js"
@@ -16,9 +18,20 @@
       "css": ["style.css"]
     }
   ],
+  "options_page": "options.html",
   "action": {
     "default_icon": {
-      "16": "icon16.png"
+      "16": "icon16.png",
+      "48": "icon48.png"
+    }
+  },
+  "commands": {
+    "activate_selection": {
+      "suggested_key": {
+        "default": "Alt+Z",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Activate selection mode"
     }
   },
   "icons": {
