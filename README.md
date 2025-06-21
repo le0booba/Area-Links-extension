@@ -10,20 +10,20 @@ A Chrome extension that lets you select multiple links on a webpage and open the
 - 📊 **Smart Filtering**: Prevents opening recently opened links
 - ⚙️ **Configurable**: Set max tabs, customize appearance
 
-## Installation
+## 📥 Installation
 
 1. Download or clone this repository
 2. Go to `chrome://extensions/`
 3. Enable "Developer mode"
 4. Click "Load unpacked" and select the extension folder
 
-## How to Use
+## 🚀 How to Use
 
 1. Press `Alt+Z` (or `Cmd+Shift+Y` on Mac) to activate
 2. Click and drag to select links
 3. Release mouse - selected links open in new tabs
 
-## Settings
+## ⚙️ Settings
 
 Click the extension icon to configure:
 
@@ -32,14 +32,14 @@ Click the extension icon to configure:
 - **Link History**: Prevent opening duplicate links
 - **Keyboard Shortcut**: Customize via Chrome's shortcuts page
 
-## Privacy
+## 🔒 Privacy
 
 - Only processes links on current webpage
 - Stores settings locally in your browser
 - No data collection or transmission
 - Works offline
 
-## Troubleshooting
+## 🛠️ Troubleshooting
 
 - **Selection not working?** Refresh the page and try again
 - **Links not opening?** Check your max tabs setting
