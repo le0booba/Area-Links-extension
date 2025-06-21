@@ -1,7 +1,7 @@
-const RECENT_LINKS_LIMIT = 15;
+const RECENT_LINKS_LIMIT = 20;
 
 // Open options page on icon click
-chrome.action.onClicked.addListener((tab) => {
+chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage();
 });
 
@@ -21,12 +21,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   if (request.action === 'openLinks' && request.urls) {
     let urlsToOpen = request.urls;
 
-    // Сначала получаем настройки пользователя
+    // Get user settings first
     const settings = await chrome.storage.sync.get({ rememberLinks: true });
 
-    // **ГЛАВНОЕ ИЗМЕНЕНИЕ:** Проверяем, включена ли опция
+    // Check if option is enabled
     if (settings.rememberLinks) {
-      // Если опция включена, выполняем фильтрацию
       const { recentLinks = [] } = await chrome.storage.local.get('recentLinks');
       const recentSet = new Set(recentLinks);
       
@@ -34,21 +33,21 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
       if (filteredUrls.length === 0 && request.urls.length > 0) {
         console.log('Select and Open Links: All found links were already opened recently.');
-        return; // Ничего не открываем
+        return;
       }
 
       urlsToOpen = filteredUrls;
 
-      // Обновляем историю только если фильтрация была включена
+      // Update history only if filtering was enabled
       const updatedRecentLinks = [...new Set([...urlsToOpen, ...recentLinks])].slice(0, RECENT_LINKS_LIMIT);
       await chrome.storage.local.set({ recentLinks: updatedRecentLinks });
     }
 
-    // Если список ссылок для открытия не пустой, открываем их
+    // Open links if list is not empty
     if (urlsToOpen.length > 0) {
-        urlsToOpen.forEach(url => {
-            chrome.tabs.create({ url: url, active: false });
-        });
+      urlsToOpen.forEach(url => {
+        chrome.tabs.create({ url: url, active: false });
+      });
     }
   }
 });
