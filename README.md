@@ -39,11 +39,30 @@ Click the extension icon to configure:
 - No data collection or transmission
 - Works offline
 
+## 📁 File Structure
+
+```
+├── manifest.json          # Extension manifest
+├── background.js          # Service worker for tab management
+├── content.js            # Content script for link selection
+├── options.html          # Settings page
+├── options.js            # Settings page logic
+├── style.css             # Selection box styles
+├── icon16.png            # Extension icon (16x16)
+├── icon48.png            # Extension icon (48x48)
+├── icon128.png           # Extension icon (128x128)
+└── README.md             # This file
+```
+
 ## 🛠️ Troubleshooting
 
 - **Selection not working?** Refresh the page and try again
 - **Links not opening?** Check your max tabs setting
 - **Settings not saving?** Try disabling and re-enabling the extension
+
+## 📄 License
+
+This project is licensed under the MIT License.
 
 ---
 
