@@ -19,15 +19,71 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     }
 });
 
+// --- Функции для предотвращения выделения текста ---
+function preventTextSelection() {
+    // Убираем любое существующее выделение
+    if (window.getSelection) {
+        window.getSelection().removeAllRanges();
+    } else if (document.selection) {
+        document.selection.empty();
+    }
+    
+    // Отключаем выделение текста для всей страницы
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
+    document.body.style.mozUserSelect = 'none';
+    document.body.style.msUserSelect = 'none';
+    
+    // Добавляем CSS класс для дополнительной защиты
+    document.body.classList.add('selection-mode-active');
+}
+
+function restoreTextSelection() {
+    document.body.style.userSelect = '';
+    document.body.style.webkitUserSelect = '';
+    document.body.style.mozUserSelect = '';
+    document.body.style.msUserSelect = '';
+    document.body.classList.remove('selection-mode-active');
+}
+
+// Обработчик для предотвращения выделения во время активного режима
+function preventSelectionEvents(e) {
+    if (isSelectionModeActive) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    }
+}
+
 // --- Логика активации ---
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "toggleSelectionMode") {
         isSelectionModeActive = !isSelectionModeActive;
-        document.body.style.cursor = isSelectionModeActive ? 'crosshair' : 'default';
+        
         if (isSelectionModeActive) {
-            document.addEventListener('mousedown', handleMouseDown, { once: true });
+            // Активируем режим выделения
+            preventTextSelection();
+            
+            // Добавляем обработчики для предотвращения выделения текста
+            document.addEventListener('selectstart', preventSelectionEvents, true);
+            document.addEventListener('mousedown', preventSelectionEvents, true);
+            document.addEventListener('dragstart', preventSelectionEvents, true);
+            
+            // Добавляем основной обработчик mousedown с небольшой задержкой
+            setTimeout(() => {
+                if (isSelectionModeActive) {
+                    document.addEventListener('mousedown', handleMouseDown, { once: true, capture: true });
+                }
+            }, 50);
         } else {
-            document.removeEventListener('mousedown', handleMouseDown);
+            // Деактивируем режим выделения
+            restoreTextSelection();
+            
+            // Убираем все обработчики
+            document.removeEventListener('selectstart', preventSelectionEvents, true);
+            document.removeEventListener('mousedown', preventSelectionEvents, true);
+            document.removeEventListener('dragstart', preventSelectionEvents, true);
+            document.removeEventListener('mousedown', handleMouseDown, true);
         }
     }
 });
@@ -36,22 +92,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function handleMouseDown(e) {
     if (!isSelectionModeActive || e.button !== 0) {
         isSelectionModeActive = false;
-        document.body.style.cursor = 'default';
+        restoreTextSelection();
         return;
     }
     
     e.preventDefault();
     e.stopPropagation();
+    e.stopImmediatePropagation();
 
-    // **НОВОЕ ИСПРАВЛЕНИЕ:** Принудительно убираем любое существующее выделение текста.
-    // Это гарантирует, что действие расширения всегда будет иметь приоритет.
-    if (window.getSelection) {
-        window.getSelection().removeAllRanges();
-    } else if (document.selection) { // Для старых версий IE (на всякий случай)
-        document.selection.empty();
-    }
-
-    document.body.style.userSelect = 'none';
+    // Дополнительно убираем выделение
+    preventTextSelection();
 
     startX = e.clientX;
     startY = e.clientY;
@@ -63,12 +113,18 @@ function handleMouseDown(e) {
     selectionBox.style.left = `${startX}px`;
     selectionBox.style.top = `${startY}px`;
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp, { once: true });
+    window.addEventListener('mousemove', handleMouseMove, { capture: true });
+    window.addEventListener('mouseup', handleMouseUp, { once: true, capture: true });
+    
+    return false;
 }
 
 function handleMouseMove(e) {
+    if (!isSelectionModeActive || !selectionBox) return;
+    
     e.preventDefault();
+    e.stopPropagation();
+    
     const currentX = e.clientX;
     const currentY = e.clientY;
 
@@ -84,10 +140,16 @@ function handleMouseMove(e) {
 }
 
 function handleMouseUp(e) {
-    window.removeEventListener('mousemove', handleMouseMove);
-    document.body.style.userSelect = '';
+    window.removeEventListener('mousemove', handleMouseMove, { capture: true });
+    
+    // Восстанавливаем возможность выделения текста
+    restoreTextSelection();
     isSelectionModeActive = false;
-    document.body.style.cursor = 'default';
+    
+    // Убираем обработчики для предотвращения выделения
+    document.removeEventListener('selectstart', preventSelectionEvents, true);
+    document.removeEventListener('mousedown', preventSelectionEvents, true);
+    document.removeEventListener('dragstart', preventSelectionEvents, true);
 
     if (selectionBox) {
         const rect = selectionBox.getBoundingClientRect();

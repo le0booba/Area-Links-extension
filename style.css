@@ -25,3 +25,22 @@
   border: 2px solid #dc3545;
   background-color: rgba(220, 53, 69, 0.15);
 }
+
+/* Prevent text selection during selection mode */
+body.selection-mode-active {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+body.selection-mode-active * {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
