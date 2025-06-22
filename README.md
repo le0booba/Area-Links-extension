@@ -14,7 +14,7 @@ A powerful Chrome extension to select a part of a webpage and open all links wit
   <img src="https://user-images.githubusercontent.com/10940564/203953782-274e3663-10e3-4c4f-9a1b-3b361a91d575.gif" alt="Area Link Opener Demo" width="80%">
 </p>
 
-## ✨ Features
+## 🧰 Features
 
 *   **🖱️ Area Selection:** Press `Alt + Z`, then click and drag to select any rectangular area on a webpage.
 *   **🚦 Smart Filtering:** Automatically ignores javascript links, internal page anchors (`#`), and user-defined domains.
