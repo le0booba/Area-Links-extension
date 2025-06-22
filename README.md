@@ -80,7 +80,7 @@ If you encounter an issue, please check the common solutions below.
 
 *   **Problem:** The `Alt + Z` shortcut doesn't work.
     *   **Solution 1:** The shortcut will not work on special Chrome pages (like `chrome://extensions`, the New Tab Page) or the Chrome Web Store. This is a security feature of Chrome. Try it on a regular website.
-    *   **Solution 2:** Another extension might be using the same shortcut. You can change the shortcut for Area Link Opener by navigating to `chrome://extensions/shortcuts`.
+    *   **Solution 2:** Another extension might be using the same shortcut. You can change the shortcut for Area Links by navigating to `chrome://extensions/shortcuts`.
 
 *   **Problem:** Some links in my selection are not opening.
     *   **Solution 1:** Check your settings. The link might be from an excluded domain, a duplicate from your recent history (if enabled), or you may have hit the "Maximum Tabs" limit.
