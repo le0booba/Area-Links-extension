@@ -1,5 +1,7 @@
 # Area Links
 
+A Chrome extension that allows users to select a webpage area and open or copy all links within it efficiently.
+
 <p align="center">
   <img src="https://img.shields.io/badge/Chrome-v100%2B-blue?logo=google-chrome&logoColor=white" alt="Chrome Version">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
@@ -7,99 +9,153 @@
   <img src="https://img.shields.io/badge/version-1.5-orange" alt="Version 1.5">
 </p>
 
-A powerful Chrome extension to select a part of a webpage and open all links within that area in new tabs, with advanced filtering and customization.
+---
+
+## ✨ Features
+
+- **Area Selection**: Drag a box over a webpage to select multiple links at once.
+- **Open Links**: Open selected links in new tabs or a new window.
+- **Copy Links**: Copy selected links to the clipboard for easy sharing.
+- **Customizable Styles**: Choose from multiple selection box styles (Classic Blue, Dashed Red, Dashed Green, Subtle Gray).
+- **Link Filtering**: Exclude domains or words and avoid duplicate links using history.
+- **Configurable Settings**: Set tab limits, reverse link order, and more.
+- **Keyboard Shortcuts**: Default shortcuts (Alt+Z for opening, Alt+X for copying) with customizable options.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/demo.gif" alt="Area Links Demo" width="40%">
 </p>
 
-## 🧰 Features
+---
 
-*   **🖱️ Area Selection:** Press `Alt + Z`, then click and drag to select any rectangular area on a webpage.
-*   **🚦 Smart Filtering:** Automatically ignores javascript links, internal page anchors (`#`), and user-defined domains.
-*   **🔢 Tab Limiting:** Set a maximum number of tabs to open at once to prevent browser overload.
-*   **📚 Smart History:** Remembers the last 15 opened links to avoid opening duplicates (can be toggled on/off).
-*   **🎨 Customizable Highlighting:** Choose from multiple visual styles for the selection box to suit your preference.
-*   **⌨️ Shortcut Ready:** The activation shortcut can be easily customized via Chrome's native extensions page.
+## 🛠️ Installation
 
-## 🚀 Installation
+1. **Download the Extension**:
+   - Clone the repository: `git clone https://github.com/le0booba/Area_Links.git`
+   - Or download the ZIP file from the [GitHub releases page](https://github.com/le0booba/Area_Links/releases).
 
-<details>
-<summary><strong>Click for instructions on loading as an unpacked extension</strong></summary>
+2. **Load in Chrome**:
+   - Open Chrome and navigate to `chrome://extensions/`.
+   - Enable **Developer mode** (toggle in the top-right corner).
+   - Click **Load unpacked** and select the folder containing the extension files.
+   - The extension will appear in your Chrome toolbar.
 
-1.  **Download:** Download this repository as a ZIP file from GitHub by clicking the `Code` button and then `Download ZIP`.
-2.  **Unzip:** Extract the ZIP file to a permanent location on your computer.
-3.  **Open Chrome Extensions:** Open Google Chrome and navigate to `chrome://extensions`.
-4.  **Enable Developer Mode:** In the top right corner of the Extensions page, turn on the "Developer mode" toggle.
-5.  **Load Unpacked:** The "Load unpacked" button will appear. Click it.
-6.  **Select Folder:** In the file dialog, navigate to the folder where you unzipped the files and select it.
-7.  The "Area Link Opener" extension will now appear in your list of extensions and is ready to use.
+3. **Verify**:
+   - Click the extension icon or go to the options page to confirm it’s installed.
 
-</details>
+---
 
-## 🖱️ How to Use
+## 📖 How to Use
 
-1.  Press **`Alt + Z`** on any webpage. Your cursor will change to a crosshair `+`.
-2.  **Click and drag** your mouse to draw a box around the links you want to open.
-3.  **Release** the mouse button. The extension will filter the links and open the valid ones in new, inactive tabs.
+1. **Open Links**:
+   - Press `Alt+Z` (default shortcut) to activate selection mode.
+   - Drag a box over the desired links using the left mouse button.
+   - Release to open all valid links in new tabs or a new window (based on settings).
 
-## 🔒 Privacy
+2. **Copy Links**:
+   - Press `Alt+X` (default shortcut) to activate copy mode.
+   - Drag a box over the links.
+   - Release to copy the links to your clipboard.
 
-Your privacy is a top priority. This extension is designed to be secure and private by default.
+3. **Access Options**:
+   - Right-click the extension icon and select **Options** to configure settings.
+   - Customize shortcuts via `chrome://extensions/shortcuts`.
 
-*   **Local Processing:** All processing of links and page content happens entirely on your computer.
-*   **No Data Transmission:** The extension **does not** send any data—including your browsing history, selected links, or settings—to any external server.
-*   **Local Storage:** All settings and your recent link history are stored locally on your machine using the standard `chrome.storage.sync` API, which syncs only across your own logged-in Chrome instances.
+---
 
 ## ⚙️ Configuration & Options
 
-To access the settings, click the extension's icon in your Chrome toolbar.
-
 <details>
-<summary><strong>Click to see available configuration options</strong></summary>
-
-<br>
+<summary>Click to view available options</summary>
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/screen_options.png" width="500" style="margin-right: 10px;">
   <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/screen_hotkeys.png" width="700" style="margin-right: 10px;">
 </p>
 
-*   **Excluded Domains:** A comma-separated list of domains to ignore.
-*   **Maximum Tabs:** Limit the number of tabs opened in a single operation.
-*   **Selection Box Style:** Choose the visual theme of the selection box.
-*   **Remember Opened Links:** Toggle the feature that prevents re-opening links from your recent history.
-*   **Clear History:** Immediately clear the memory of recently opened links.
+- **Excluded Domains**: Enter comma-separated domains (e.g., `example.com, test.org`) to skip links from those sites.
+- **Excluded Words**: Enter comma-separated words to exclude links containing them (e.g., `login, signup`).
+- **Maximum Tabs**: Set a limit for the number of tabs opened at once (default: 15).
+- **Selection Box Style**: Choose from Classic Blue, Dashed Red, Dashed Green, or Subtle Gray.
+- **Remember History**: Enable to avoid opening duplicate links (stored locally).
+- **Open in New Window**: Open links in a new browser window instead of tabs.
+- **Reverse Order**: Open links in reverse order of selection.
+- **Clear History**: Reset the link history via the options page.
+- **Shortcuts**: Customize via `chrome://extensions/shortcuts`.
 
 </details>
 
-## 🔧 Troubleshooting
+---
 
-If you encounter an issue, please check the common solutions below.
+## 🔒 Privacy
 
-*   **Problem:** The `Alt + Z` shortcut doesn't work.
-    *   **Solution 1:** The shortcut will not work on special Chrome pages (like `chrome://extensions`, the New Tab Page) or the Chrome Web Store. This is a security feature of Chrome. Try it on a regular website.
-    *   **Solution 2:** Another extension might be using the same shortcut. You can change the shortcut for Area Links by navigating to `chrome://extensions/shortcuts`.
+- **Data Storage**: All settings and link history are stored locally using Chrome’s `storage.sync` API.
+- **No Tracking**: The extension does not collect or transmit any user data.
+- **Permissions**:
+  - `storage`: For saving user settings and link history.
+  - `tabs`: To open new tabs or windows.
+  - `scripting`: To inject content scripts for link selection.
+  - `host_permissions: <all_urls>`: To function on any webpage (filtered by user settings).
 
-*   **Problem:** Some links in my selection are not opening.
-    *   **Solution 1:** Check your settings. The link might be from an excluded domain, a duplicate from your recent history (if enabled), or you may have hit the "Maximum Tabs" limit.
-    *   **Solution 2:** The extension intentionally ignores `javascript:` links and internal page anchors (e.g., `#section-2`) as they don't lead to new pages.
+---
 
-## 📁 File Structure
+## 🛠️ Troubleshooting
+
+<details>
+<summary>Click to view common issues and solutions</summary>
+
+- **Extension doesn’t work on some pages**:
+  - The extension cannot run on Chrome internal pages (e.g., `chrome://`) or the New Tab page due to browser restrictions.
+  - Ensure the page is fully loaded before using the shortcut.
+
+- **Shortcuts not working**:
+  - Check for conflicts in `chrome://extensions/shortcuts`.
+  - Reassign shortcuts if needed.
+
+- **Links not opening/copying**:
+  - Verify that the selection box covers the links completely.
+  - Check if the links are excluded by domain or word filters in the options.
+  - Ensure the tab limit isn’t reached.
+
+- **Selection box not visible**:
+  - Try switching to a different selection style in the options.
+  - Ensure no other extensions are interfering with CSS.
+
+</details>
+
+---
+
+## 📂 File Structure
+
+<details>
+<summary>Click to view project files</summary>
 
 ```
-link-opener-extension/
-├── manifest.json         # Core file defining the extension's properties and permissions.
-├── background.js         # Service worker for handling core logic, events, and storage.
-├── content.js            # Injects into webpages to handle DOM interaction (area selection).
-├── options.html          # The HTML structure for the settings page.
-├── options.js            # The JavaScript logic for the settings page.
-├── styles.css            # Defines the visual styles for the selection box.
-├── icons/                # Contains all the extension's icons (16, 48, 128px).
-├── README.md             # You are here.
+Area_Links/
+├── background.js        # Service worker for handling link opening and history
+├── content.js           # Content script for area selection and link processing
+├── manifest.json        # Extension configuration
+├── options.html         # Options page UI
+├── options.js           # Options page logic
+├── popup.html           # Popup UI
+├── popup.js             # Popup logic
+├── styles.css           # Selection box styles
+├── icons/               # Extension icons (16px, 48px, 128px)
+│   ├── icon16.png
+│   ├── icon48.png
+│   └── icon128.png
+├── README.md            # Project documentation
 └── LICENSE.md            # The MIT software license.
 ```
 
-## 📄 License
+</details>
+
+---
+
+## 📜 License
 
 This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
+
+© 2025 badrenton
+
+
+⭐ Enjoying the extension? Consider giving it a star!
