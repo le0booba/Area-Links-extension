@@ -141,5 +141,6 @@ Area_Links/
 
 <p align="center">
 © 2025 badrenton
+<br>
 <sup>⭐ Enjoying the extension? Consider giving it a star!</sup>
 </p>
