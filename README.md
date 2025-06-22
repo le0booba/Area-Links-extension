@@ -10,8 +10,7 @@
 A powerful Chrome extension to select a part of a webpage and open all links within that area in new tabs, with advanced filtering and customization.
 
 <p align="center">
-  <em>(Replace this with a GIF of the extension in action)</em><br>
-  <img src="https://user-images.githubusercontent.com/10940564/203953782-274e3663-10e3-4c4f-9a1b-3b361a91d575.gif" alt="Area Link Opener Demo" width="80%">
+  <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/ezgif-223c1b9ed5fa89333.gif" alt="Area Links Demo" width="40%">
 </p>
 
 ## 🧰 Features
@@ -62,8 +61,8 @@ To access the settings, click the extension's icon in your Chrome toolbar.
 <br>
 
 <p align="center">
-  <em>(Replace this with a screenshot of your options page)</em><br>
-  <img src="https://i.imgur.com/your-options-page-screenshot.png" alt="Options Page Screenshot" width="80%">
+  <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/screen_options.png" width="500" style="margin-right: 10px;">
+  <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/screen_hotkeys.png" width="700" style="margin-right: 10px;">
 </p>
 
 *   **Excluded Domains:** A comma-separated list of domains to ignore.
