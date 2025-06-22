@@ -2,12 +2,6 @@
 
 A Chrome extension that allows users to select a webpage area and open or copy all links within it efficiently.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Chrome-v100%2B-blue?logo=google-chrome&logoColor=white" alt="Chrome Version">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
-  <img src="https://img.shields.io/badge/version-1.5-orange" alt="Version 1.5">
-</p>
-
 ---
 
 ## ✨ Features
