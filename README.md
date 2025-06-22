@@ -126,9 +126,6 @@ A Chrome extension that allows users to select a webpage area and open or copy a
 
 ## 📂 File Structure
 
-<details>
-<summary>Click to view project files</summary>
-
 ```
 Area_Links/
 ├── background.js        # Service worker for handling link opening and history
@@ -146,8 +143,6 @@ Area_Links/
 ├── README.md            # Project documentation
 └── LICENSE.md            # The MIT software license.
 ```
-
-</details>
 
 ---
 
