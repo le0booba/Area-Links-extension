@@ -1,189 +1,176 @@
 let isSelectionModeActive = false;
+let isSelecting = false;
+let startCoords = { x: 0, y: 0 };
 let selectionBox = null;
-let startX = 0;
-let startY = 0;
-let userSettings = { maxTabs: 15, selectionStyle: 'style-default' };
+let currentSelectionStyle = 'classic-blue';
 
-// Load settings on init
-chrome.storage.sync.get({ maxTabs: 15, selectionStyle: 'style-default' }, (settings) => {
-  userSettings = settings;
-});
+let isCopyMode = false;
 
-// Listen for settings changes
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'sync') {
-    if (changes.maxTabs) userSettings.maxTabs = changes.maxTabs.newValue;
-    if (changes.selectionStyle) userSettings.selectionStyle = changes.selectionStyle.newValue;
+let lastSelectedLinks = [];
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === "initiateSelection") {
+    isSelectionModeActive = true;
+    isCopyMode = false;
+    document.body.style.cursor = 'crosshair';
+    currentSelectionStyle = request.style;
+    sendResponse({ success: true });
   }
-});
-
-// Prevent text selection functions
-function preventTextSelection() {
-  // Clear any existing selection
-  const selection = window.getSelection ? window.getSelection() : document.selection;
-  if (selection) {
-    selection.removeAllRanges ? selection.removeAllRanges() : selection.empty();
+  if (request.type === "initiateSelectionCopy") {
+    isSelectionModeActive = true;
+    isCopyMode = true;
+    document.body.style.cursor = 'crosshair';
+    currentSelectionStyle = request.style;
+    sendResponse({ success: true });
   }
-  
-  // Disable text selection
-  const styles = ['userSelect', 'webkitUserSelect', 'mozUserSelect', 'msUserSelect'];
-  styles.forEach(style => { document.body.style[style] = 'none'; });
-  
-  document.body.classList.add('selection-mode-active');
-}
-
-function restoreTextSelection() {
-  const styles = ['userSelect', 'webkitUserSelect', 'mozUserSelect', 'msUserSelect'];
-  styles.forEach(style => { document.body.style[style] = ''; });
-  document.body.classList.remove('selection-mode-active');
-}
-
-// Event handler to prevent selection during active mode
-function preventSelectionEvents(e) {
-  if (isSelectionModeActive) {
-    e.preventDefault();
-    e.stopPropagation();
-    return false;
-  }
-}
-
-// Toggle selection mode
-chrome.runtime.onMessage.addListener((request) => {
-  if (request.action === "toggleSelectionMode") {
-    isSelectionModeActive = !isSelectionModeActive;
-    
-    if (isSelectionModeActive) {
-      preventTextSelection();
-      
-      // Add event listeners to prevent text selection
-      const events = ['selectstart', 'mousedown', 'dragstart'];
-      events.forEach(event => {
-        document.addEventListener(event, preventSelectionEvents, true);
-      });
-      
-      // Add main mousedown handler with delay
-      setTimeout(() => {
-        if (isSelectionModeActive) {
-          document.addEventListener('mousedown', handleMouseDown, { once: true, capture: true });
-        }
-      }, 50);
+  if (request.type === "copyLastSelectedLinks") {
+    if (lastSelectedLinks.length > 0) {
+      copyLinksToClipboard(lastSelectedLinks);
+      sendResponse({ success: true });
     } else {
-      restoreTextSelection();
-      
-      // Remove all event listeners
-      const events = ['selectstart', 'mousedown', 'dragstart'];
-      events.forEach(event => {
-        document.removeEventListener(event, preventSelectionEvents, true);
-      });
-      document.removeEventListener('mousedown', handleMouseDown, true);
+      sendResponse({ success: false });
     }
+  }
+  return true;
+});
+
+document.addEventListener('mousedown', (e) => {
+  if (e.button !== 0 || !isSelectionModeActive) return;
+
+  e.preventDefault();
+  isSelecting = true;
+  startCoords = { x: e.clientX, y: e.clientY };
+
+  if (!selectionBox) {
+    selectionBox = document.createElement('div');
+    selectionBox.id = 'link-opener-selection-box';
+    selectionBox.className = currentSelectionStyle;
+    document.body.appendChild(selectionBox);
+  }
+  
+  updateSelectionBox(e);
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isSelecting) return;
+  updateSelectionBox(e);
+});
+
+document.addEventListener('mouseup', (e) => {
+  if (e.button !== 0 || !isSelecting) return;
+  
+  isSelecting = false;
+  isSelectionModeActive = false;
+  document.body.style.cursor = 'default';
+
+  const endCoords = { x: e.clientX, y: e.clientY };
+  
+  const selectionRect = {
+    left: Math.min(startCoords.x, endCoords.x),
+    top: Math.min(startCoords.y, endCoords.y),
+    right: Math.max(startCoords.x, endCoords.x),
+    bottom: Math.max(startCoords.y, endCoords.y)
+  };
+  
+  if (selectionBox) {
+      document.body.removeChild(selectionBox);
+      selectionBox = null;
+  }
+  
+  if (selectionRect.right - selectionRect.left > 5 && selectionRect.bottom - selectionRect.top > 5) {
+      if (isCopyMode) {
+        const links = findLinksInArea(selectionRect);
+        lastSelectedLinks = links.slice();
+        if (links.length > 0) {
+          copyLinksToClipboard(links);
+        }
+      } else {
+        findAndSendLinks(selectionRect);
+      }
   }
 });
 
-// Mouse event handlers
-function handleMouseDown(e) {
-  if (!isSelectionModeActive || e.button !== 0) {
-    isSelectionModeActive = false;
-    restoreTextSelection();
-    return;
-  }
-  
-  e.preventDefault();
-  e.stopPropagation();
-  e.stopImmediatePropagation();
+function updateSelectionBox(e) {
+  const currentCoords = { x: e.clientX, y: e.clientY };
+  const left = Math.min(startCoords.x, currentCoords.x);
+  const top = Math.min(startCoords.y, currentCoords.y);
+  const width = Math.abs(startCoords.x - currentCoords.x);
+  const height = Math.abs(startCoords.y - currentCoords.y);
 
-  preventTextSelection();
-
-  startX = e.clientX;
-  startY = e.clientY;
-
-  selectionBox = document.createElement('div');
-  selectionBox.className = `selection-box-by-dev ${userSettings.selectionStyle}`;
-  Object.assign(selectionBox.style, {
-    left: `${startX}px`,
-    top: `${startY}px`
-  });
-  document.body.appendChild(selectionBox);
-
-  window.addEventListener('mousemove', handleMouseMove, { capture: true });
-  window.addEventListener('mouseup', handleMouseUp, { once: true, capture: true });
-  
-  return false;
+  selectionBox.style.left = `${left}px`;
+  selectionBox.style.top = `${top}px`;
+  selectionBox.style.width = `${width}px`;
+  selectionBox.style.height = `${height}px`;
 }
 
-function handleMouseMove(e) {
-  if (!isSelectionModeActive || !selectionBox) return;
-  
-  e.preventDefault();
-  e.stopPropagation();
-  
-  const width = Math.abs(e.clientX - startX);
-  const height = Math.abs(e.clientY - startY);
-  const left = Math.min(e.clientX, startX);
-  const top = Math.min(e.clientY, startY);
+function findAndSendLinks(selectionRect) {
+  const allLinks = document.querySelectorAll('a[href]');
+  const linksInArea = [];
 
-  Object.assign(selectionBox.style, {
-    width: `${width}px`,
-    height: `${height}px`,
-    left: `${left}px`,
-    top: `${top}px`
-  });
-}
-
-function handleMouseUp() {
-  window.removeEventListener('mousemove', handleMouseMove, { capture: true });
-  
-  restoreTextSelection();
-  isSelectionModeActive = false;
-  
-  // Remove selection prevention listeners
-  const events = ['selectstart', 'mousedown', 'dragstart'];
-  events.forEach(event => {
-    document.removeEventListener(event, preventSelectionEvents, true);
-  });
-
-  if (selectionBox) {
-    const rect = selectionBox.getBoundingClientRect();
-    if (rect.width > 5 || rect.height > 5) {
-      findAndProcessLinks(rect);
+  allLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+      return;
     }
-    document.body.removeChild(selectionBox);
-    selectionBox = null;
+
+    const linkRect = link.getBoundingClientRect();
+    
+    if (linkRect.width > 0 && linkRect.height > 0 &&
+        linkRect.left < selectionRect.right &&
+        linkRect.right > selectionRect.left &&
+        linkRect.top < selectionRect.bottom &&
+        linkRect.bottom > selectionRect.top) {
+      
+      linksInArea.push(link.href);
+    }
+  });
+
+  lastSelectedLinks = linksInArea.slice();
+
+  if (linksInArea.length > 0) {
+    chrome.runtime.sendMessage({ type: "openLinks", urls: linksInArea });
   }
 }
 
-// Process links in selection
-function findAndProcessLinks(selectionRect) {
-  const links = Array.from(document.querySelectorAll('a[href]'));
-  
-  const linksInSelection = links.filter(link => {
+function findLinksInArea(selectionRect) {
+  const allLinks = document.querySelectorAll('a[href]');
+  const linksInArea = [];
+
+  allLinks.forEach(link => {
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+      return;
+    }
+
     const linkRect = link.getBoundingClientRect();
-    return !(linkRect.right < selectionRect.left || 
-             linkRect.left > selectionRect.right || 
-             linkRect.bottom < selectionRect.top || 
-             linkRect.top > selectionRect.bottom) && 
-             link.offsetParent !== null;
+    
+    if (linkRect.width > 0 && linkRect.height > 0 &&
+        linkRect.left < selectionRect.right &&
+        linkRect.right > selectionRect.left &&
+        linkRect.top < selectionRect.bottom &&
+        linkRect.bottom > selectionRect.top) {
+      
+      linksInArea.push(link.href);
+    }
   });
 
-  // Sort links by position
-  linksInSelection.sort((a, b) => {
-    const rectA = a.getBoundingClientRect();
-    const rectB = b.getBoundingClientRect();
-    return rectA.top !== rectB.top ? rectA.top - rectB.top : rectA.left - rectB.left;
-  });
+  return linksInArea;
+}
 
-  const validUrls = linksInSelection
-    .map(link => link.href)
-    .filter(url => url && url.startsWith('http'));
-
-  const uniqueLinks = [...new Set(validUrls)];
-  const limitedLinks = uniqueLinks.slice(0, userSettings.maxTabs);
-
-  if (uniqueLinks.length > limitedLinks.length) {
-    alert(`Found ${uniqueLinks.length} unique links.\nOpening the first ${userSettings.maxTabs} in order, as per your settings.`);
-  }
-
-  if (limitedLinks.length > 0) {
-    chrome.runtime.sendMessage({ action: 'openLinks', urls: limitedLinks });
+function copyLinksToClipboard(links) {
+  const text = links.join('\n');
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text);
+  } else {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      document.execCommand('copy');
+    } catch (e) {}
+    document.body.removeChild(textarea);
   }
 }

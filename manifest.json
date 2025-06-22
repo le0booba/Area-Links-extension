@@ -1,42 +1,57 @@
 {
   "manifest_version": 3,
-  "name": "Select and Open Links",
-  "version": "1.4",
-  "description": "Opens all links within a selected area using a customizable hotkey.",
+  "name": "Area Links",
+  "version": "1.5",
+  "description": "Select a webpage area to open all links within it.",
   "permissions": [
-    "tabs",
     "storage",
-    "activeTab"
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["style.css"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "styles.css"
+      ]
     }
   ],
-  "options_page": "options.html",
   "action": {
     "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png"
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
     }
   },
+  "options_page": "options.html",
   "commands": {
-    "activate_selection": {
+    "activate-selection": {
       "suggested_key": {
-        "default": "Alt+Z",
-        "mac": "Command+Shift+Y"
+        "default": "Alt+Z"
       },
-      "description": "Activate selection mode"
+      "description": "Activate area selection to open links"
+    },
+    "activate-selection-copy": {
+      "suggested_key": {
+        "default": "Alt+X"
+      },
+      "description": "Activate area selection to copy links"
     }
   },
   "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }

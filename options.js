@@ -1,52 +1,76 @@
-// Default settings
-const DEFAULT_SETTINGS = {
-  maxTabs: 15,
-  selectionStyle: 'style-default',
-  rememberLinks: true
-};
-
-// Show status message
-function showStatus(message) {
+function showStatus(message, duration = 2000) {
   const status = document.getElementById('status');
   status.textContent = message;
-  status.style.opacity = 1;
-  setTimeout(() => { status.style.opacity = 0; }, 2000);
+  setTimeout(() => {
+    status.textContent = '';
+  }, duration);
 }
 
-// Save options to chrome.storage
 function saveOptions() {
-  const maxTabs = parseInt(document.getElementById('max-tabs').value, 10);
-  const selectionStyle = document.querySelector('input[name="selection-style"]:checked').value;
-  const rememberLinks = document.getElementById('remember-links').checked;
-  
-  chrome.storage.sync.set({ maxTabs, selectionStyle, rememberLinks }, () => {
-    showStatus('Settings saved.');
+  const excludedDomains = document.getElementById('excludedDomains').value;
+  const excludedWords = document.getElementById('excludedWords').value;
+  const tabLimit = document.getElementById('tabLimit').value;
+  const useHistory = document.getElementById('useHistory').checked;
+  const selectionStyle = document.getElementById('selectionStyle').value;
+  const openInNewWindow = document.getElementById('openInNewWindow').checked;
+  const reverseOrder = document.getElementById('reverseOrder').checked;
+
+  chrome.storage.sync.set({
+    excludedDomains: excludedDomains,
+    excludedWords: excludedWords,
+    tabLimit: parseInt(tabLimit, 10),
+    useHistory: useHistory,
+    selectionStyle: selectionStyle,
+    openInNewWindow: openInNewWindow,
+    reverseOrder: reverseOrder
+  }, () => {
+    showStatus('Options saved.');
   });
 }
 
-// Load settings from chrome.storage and display them
 function restoreOptions() {
-  chrome.storage.sync.get(DEFAULT_SETTINGS, (items) => {
-    document.getElementById('max-tabs').value = items.maxTabs;
-    document.getElementById(items.selectionStyle).checked = true;
-    document.getElementById('remember-links').checked = items.rememberLinks;
+  chrome.storage.sync.get({
+    excludedDomains: '',
+    excludedWords: '',
+    tabLimit: 15,
+    useHistory: true,
+    selectionStyle: 'classic-blue',
+    openInNewWindow: false,
+    reverseOrder: false
+  }, (items) => {
+    document.getElementById('excludedDomains').value = items.excludedDomains;
+    document.getElementById('excludedWords').value = items.excludedWords;
+    document.getElementById('tabLimit').value = items.tabLimit;
+    document.getElementById('useHistory').checked = items.useHistory;
+    document.getElementById('selectionStyle').value = items.selectionStyle;
+    document.getElementById('openInNewWindow').checked = items.openInNewWindow;
+    document.getElementById('reverseOrder').checked = items.reverseOrder;
   });
 }
 
-// Clear the recently opened links history
 function clearHistory() {
-  chrome.storage.local.set({ recentLinks: [] }, () => {
-    showStatus('Link history cleared.');
+  chrome.runtime.sendMessage({ type: "clearHistory" }, (response) => {
+    if (response.success) {
+      showStatus(response.message);
+    } else {
+      showStatus('Error clearing history.', 3000);
+    }
   });
 }
 
-// Open Chrome shortcuts settings
-function openShortcutSettings() {
+function openShortcuts() {
   chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
 }
 
-// Event listeners
 document.addEventListener('DOMContentLoaded', restoreOptions);
 document.getElementById('save').addEventListener('click', saveOptions);
-document.getElementById('clear-history').addEventListener('click', clearHistory);
-document.getElementById('shortcut-link').addEventListener('click', openShortcutSettings);
+document.getElementById('clearHistory').addEventListener('click', clearHistory);
+document.getElementById('shortcutsLink').addEventListener('click', openShortcuts);
+
+document.addEventListener('DOMContentLoaded', function() {
+  const version = chrome.runtime.getManifest().version;
+  const versionElem = document.getElementById('ext-version');
+  if (versionElem) {
+    versionElem.textContent = 'v' + version;
+  }
+});

@@ -1,53 +1,118 @@
-const RECENT_LINKS_LIMIT = 20;
+const HISTORY_LIMIT = 15;
 
-// Open options page on icon click
-chrome.action.onClicked.addListener(() => {
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.sync.set({
+    excludedDomains: '',
+    tabLimit: 15,
+    linkHistory: [],
+    useHistory: true,
+    selectionStyle: 'classic-blue'
+  });
+});
+
+chrome.action.onClicked.addListener((tab) => {
   chrome.runtime.openOptionsPage();
 });
 
-// Listen for the keyboard shortcut
-chrome.commands.onCommand.addListener((command) => {
-  if (command === "activate_selection") {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: "toggleSelectionMode" });
+chrome.commands.onCommand.addListener(async (command, tab) => {
+  if (command === "activate-selection") {
+    if (tab.url && (tab.url.startsWith('http://') || tab.url.startsWith('https://'))) {
+      const { selectionStyle } = await chrome.storage.sync.get('selectionStyle');
+      chrome.tabs.sendMessage(tab.id, { 
+        type: "initiateSelection",
+        style: selectionStyle || 'classic-blue'
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn("Could not establish connection. Is the page reloading?", chrome.runtime.lastError.message);
+        }
+      });
+    } else {
+      console.log("Area Links: Cannot activate on this page (e.g., chrome:// or New Tab Page).");
+    }
+  }
+  if (command === "activate-selection-copy") {
+    if (tab.url && (tab.url.startsWith('http://') || tab.url.startsWith('https://'))) {
+      const { selectionStyle } = await chrome.storage.sync.get('selectionStyle');
+      chrome.tabs.sendMessage(tab.id, { 
+        type: "initiateSelectionCopy",
+        style: selectionStyle || 'classic-blue'
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn("Could not establish connection. Is the page reloading?", chrome.runtime.lastError.message);
+        }
+      });
+    } else {
+      console.log("Area Links: Cannot activate on this page (e.g., chrome:// or New Tab Page).");
+    }
+  }
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === "openLinks") {
+    processLinks(request.urls);
+    return true;
+  }
+  if (request.type === "clearHistory") {
+    chrome.storage.sync.set({ linkHistory: [] }, () => {
+      console.log('Link history cleared.');
+      sendResponse({ success: true, message: 'History cleared!' });
+    });
+    return true;
+  }
+});
+
+async function processLinks(urls) {
+  const settings = await chrome.storage.sync.get([
+    'excludedDomains', 'excludedWords', 'tabLimit', 'linkHistory', 'useHistory', 'openInNewWindow', 'reverseOrder'
+  ]);
+
+  const excludedDomains = settings.excludedDomains ? settings.excludedDomains.split(',').map(d => d.trim().toLowerCase()).filter(Boolean) : [];
+  const excludedWords = settings.excludedWords ? settings.excludedWords.split(',').map(w => w.trim().toLowerCase()).filter(Boolean) : [];
+  const tabLimit = settings.tabLimit || 15;
+  let linkHistory = settings.linkHistory || [];
+  const useHistory = settings.useHistory !== false;
+  const openInNewWindow = !!settings.openInNewWindow;
+  const reverseOrder = !!settings.reverseOrder;
+
+  let uniqueUrls = [...new Set(urls)];
+
+  if (reverseOrder) {
+    uniqueUrls = uniqueUrls.reverse();
+  }
+
+  const filteredUrls = uniqueUrls.filter(url => {
+    if (useHistory && linkHistory.includes(url)) {
+      return false;
+    }
+    try {
+      const hostname = new URL(url).hostname.toLowerCase();
+      if (excludedDomains.some(domain => hostname.includes(domain))) {
+        return false;
       }
+      if (excludedWords.some(word => word && url.toLowerCase().includes(word))) {
+        return false;
+      }
+    } catch (e) {
+      console.warn('Invalid URL skipped:', url, e);
+      return false;
+    }
+    return true;
+  });
+
+  const urlsToOpen = filteredUrls.slice(0, tabLimit);
+
+  if (openInNewWindow && urlsToOpen.length > 0) {
+    chrome.windows.create({ url: urlsToOpen, focused: true });
+  } else {
+    urlsToOpen.forEach(url => {
+      chrome.tabs.create({ url: url, active: false });
     });
   }
-});
 
-// Listen for links to open from content.js
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-  if (request.action === 'openLinks' && request.urls) {
-    let urlsToOpen = request.urls;
-
-    // Get user settings first
-    const settings = await chrome.storage.sync.get({ rememberLinks: true });
-
-    // Check if option is enabled
-    if (settings.rememberLinks) {
-      const { recentLinks = [] } = await chrome.storage.local.get('recentLinks');
-      const recentSet = new Set(recentLinks);
-      
-      const filteredUrls = request.urls.filter(url => !recentSet.has(url));
-
-      if (filteredUrls.length === 0 && request.urls.length > 0) {
-        console.log('Select and Open Links: All found links were already opened recently.');
-        return;
-      }
-
-      urlsToOpen = filteredUrls;
-
-      // Update history only if filtering was enabled
-      const updatedRecentLinks = [...new Set([...urlsToOpen, ...recentLinks])].slice(0, RECENT_LINKS_LIMIT);
-      await chrome.storage.local.set({ recentLinks: updatedRecentLinks });
-    }
-
-    // Open links if list is not empty
-    if (urlsToOpen.length > 0) {
-      urlsToOpen.forEach(url => {
-        chrome.tabs.create({ url: url, active: false });
-      });
-    }
+  if (useHistory && urlsToOpen.length > 0) {
+    const newHistory = [...urlsToOpen, ...linkHistory].slice(0, HISTORY_LIMIT);
+    chrome.storage.sync.set({ linkHistory: newHistory });
   }
-});
+
+  console.log(`Opened ${urlsToOpen.length} of ${filteredUrls.length} potential links.`);
+}
