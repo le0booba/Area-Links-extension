@@ -10,7 +10,7 @@
 A powerful Chrome extension to select a part of a webpage and open all links within that area in new tabs, with advanced filtering and customization.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/ezgif-223c1b9ed5fa89333.gif" alt="Area Links Demo" width="40%">
+  <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/demo.gif" alt="Area Links Demo" width="40%">
 </p>
 
 ## 🧰 Features
