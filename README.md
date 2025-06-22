@@ -1,4 +1,4 @@
-# Area Link Opener
+# Area Links
 
 <p align="center">
   <img src="https://img.shields.io/badge/Chrome-v100%2B-blue?logo=google-chrome&logoColor=white" alt="Chrome Version">
