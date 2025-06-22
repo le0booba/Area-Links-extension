@@ -140,8 +140,6 @@ Area_Links/
 ---
 
 <p align="center">
-`` © 2025 badrenton ``
-</p>
-<p align="center">
+© 2025 badrenton
 <sup>⭐ Enjoying the extension? Consider giving it a star!</sup>
 </p>
