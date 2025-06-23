@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Area Links",
-  "version": "1.5",
+  "version": "1.5.2",
   "description": "Select a webpage area to open all links within it.",
   "permissions": [
     "storage",
