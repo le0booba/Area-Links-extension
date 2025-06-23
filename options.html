@@ -41,7 +41,7 @@
     .title-group {
       display: flex;
       align-items: flex-end;
-      gap: 15px; /* Увеличено расстояние */
+      gap: 15px;
     }
     .main-title {
       font-family: Impact, 'Arial Black', Arial, sans-serif;
@@ -82,6 +82,8 @@
       color: #888;
       font-size: 0.95em;
       user-select: text;
+      font-family: monospace;
+      font-size: medium;
     }
     .footer-info a {
       color: #007bff;
@@ -90,6 +92,12 @@
       display: inline-block;
       margin-bottom: 10px;
     }
+    .footer-info img {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
@@ -97,7 +105,6 @@
     <div class="header-row">
       <div class="title-group">
         <span class="main-title dashed-outline">Area Links</span>
-        <!-- Стиль изменен для смещения вверх -->
         <span id="ext-version" class="ext-version" style="font-size:1.3em; color:#105a9b; opacity:0.7; position:relative; font-family: system-ui; bottom: 8px;"></span>
       </div>
       <span class="settings-title">Settings</span>
@@ -145,6 +152,7 @@
       <p><strong>To customize shortcuts:</strong> Go to <span id="shortcutsLink" class="link-style">chrome://extensions/shortcuts</span>.</p>
     </div>
     <div class="footer-info">
+      <img src="icons/peace.jpg">
       <a href="https://github.com/le0booba/Area_Links" target="_blank">https://github.com/le0booba/Area_Links</a><br>
       © badrenton 2025
     </div>
