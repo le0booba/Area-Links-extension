@@ -74,7 +74,7 @@ A Chrome extension to select an area on a webpage and open or copy all links wit
 ## 📂 File Structure
 
 ```
-Area-Links-extension/
+Area_Links-extension/
 ├── background.js        # Service worker for link handling/history
 ├── content.js           # Content script for area selection
 ├── manifest.json        # Extension config
