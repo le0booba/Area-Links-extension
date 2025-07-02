@@ -15,7 +15,7 @@
 
 ---
 
-## ✨ Features
+## 🌟 Features
 
 ### 🎯 **Core Functionality**
 - 🖱️ **Visual Area Selection:** Drag and drop to select multiple links at once
@@ -95,7 +95,25 @@ Excluded Domains: facebook.com, twitter.com, ads.google.com
 Excluded Words: login, logout, unsubscribe, signup
 ```
 
----
+## 📁 Project Structure
+
+```
+Area_Links/
+├── 📑 manifest.json        # Extension configuration
+├── 🔧 background.js        # Service worker & message handling  
+├── 🔧 content.js           # Page interaction & selection logic
+├── 🎨 styles.css           # Selection box styling
+├── ⚙️ options.html         # Full settings page
+├── ⚙️ options.js           # Settings page logic
+├── ⚙️ popup.html           # Quick settings popup
+├── ⚙️ popup.js             # Popup functionality
+├── 🖺 README.md            # This file
+└── 🗁 icons/ 🖼️            # Extension icons
+    ├── icon16.png
+    ├── icon48.png
+    ├── icon128.png
+    └── peace.jpg
+```
 
 ## 🔒 Privacy & Permissions
 
