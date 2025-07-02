@@ -4,8 +4,7 @@
 <br>
 
 ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-blue?logo=googlechrome)
-
----
+<br>
 
 ### Use Cases
 - **Research:** Quickly open multiple academic papers or articles
