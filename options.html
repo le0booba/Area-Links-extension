@@ -28,7 +28,14 @@
     #clearHistory { background-color: #dc3545; }
     #clearHistory:hover { background-color: #c82333; }
     #status { margin-top: 15px; color: green; font-weight: bold; text-align: center; height: 1em; }
-    .info { background-color: #e9ecef; padding: 15px; border-radius: 4px; margin-top: 25px; font-size: 0.9em; text-align: left; }
+    .info { 
+      background-color: #e9ecef; 
+      padding: 15px; 
+      border-radius: 4px; 
+      margin-top: 25px; 
+      font-size: 1.07em;
+      text-align: left; 
+    }
     .history-options { margin-top: 20px; display: flex; align-items: center; justify-content: space-between; }
     .history-options label { margin-top: 0; }
     .link-style { color: #007bff; text-decoration: underline; cursor: pointer; }
@@ -98,9 +105,28 @@
       margin-right: auto;
       margin-bottom: 15px;
     }
-    /* ДОБАВЛЕНО: Стиль для значка копирайта */
     .copyright-symbol {
-      font-size: 1.3em; /* Увеличивает размер в 1.5 раза. Можете изменить это значение. */
+      font-size: 1.3em;
+    }
+    .icon-btn {
+      background: #f3f3f3;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .icon-btn:hover {
+      background: #e0e0e0;
+    }
+    .icon-btn svg {
+      pointer-events: none;
     }
   </style>
 </head>
@@ -115,10 +141,26 @@
     </div>
     
     <label for="excludedDomains">Excluded Domains (comma-separated):</label>
-    <textarea id="excludedDomains" placeholder="example.com, sitelock.com"></textarea>
+    <div style="display: flex; gap: 8px; align-items: flex-start;">
+      <textarea id="excludedDomains" placeholder="example.com, sitelock.com"></textarea>
+      <button type="button" id="clearExcludedDomains" title="Clear field" class="icon-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18" style="display:block" xmlns="http://www.w3.org/2000/svg">
+          <line x1="4" y1="4" x2="14" y2="14" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="4" x2="4" y2="14" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
 
     <label for="excludedWords">Exclude links containing these words (comma-separated):</label>
-    <textarea id="excludedWords" placeholder="logout, unsubscribe"></textarea>
+    <div style="display: flex; gap: 8px; align-items: flex-start;">
+      <textarea id="excludedWords" placeholder="logout, unsubscribe"></textarea>
+      <button type="button" id="clearExcludedWords" title="Clear field" class="icon-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18" style="display:block" xmlns="http://www.w3.org/2000/svg">
+          <line x1="4" y1="4" x2="14" y2="14" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+          <line x1="14" y1="4" x2="4" y2="14" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
 
     <label for="tabLimit">Maximum Tabs to Open at Once:</label>
     <input type="number" id="tabLimit" min="1" max="50">
@@ -139,6 +181,10 @@
       <button id="clearHistory">Clear History</button>
     </div>
 
+    <div>
+      <label style="display: inline-block; font-weight: normal;"><input type="checkbox" id="checkDuplicatesOnCopy">Remove duplicates when copying links</label>
+    </div>
+
     <div style="margin-top: 15px;">
       <input type="checkbox" id="openInNewWindow">
       <label for="openInNewWindow" style="display: inline-block; font-weight: normal;">Open in new window</label>
@@ -151,14 +197,13 @@
     <div id="status"></div>
 
     <div class="info">
-      <p><strong>How to use:</strong> Hold down <strong>Alt + Z</strong> and drag a box with your left mouse button over the links you want to open.</p>
-      <p><strong>To copy links:</strong> Hold down <strong>Alt + X</strong> and drag a box to copy all links in the area to the clipboard.</p>
+      <p><strong>How to use:</strong> Hold down <strong>Alt + Z</strong><i> (by default)</i> and drag a box with your left mouse button over the links you want to open.</p>
+      <p><strong>To copy links:</strong> Hold down <strong>Alt + X</strong><i> (by default)</i> and drag a box to copy all links in the area to the clipboard.</p>
       <p><strong>To customize shortcuts:</strong> Go to <span id="shortcutsLink" class="link-style">chrome://extensions/shortcuts</span>.</p>
     </div>
     <div class="footer-info">
       <img src="icons/peace.jpg">
       <a href="https://github.com/le0booba/Area_Links" target="_blank">https://github.com/le0booba/Area_Links</a><br>
-      <!-- ИЗМЕНЕНО: значок обернут в span для стилизации -->
       <span class="copyright-symbol">&copy;</span> badrenton 2025
     </div>
   </div>

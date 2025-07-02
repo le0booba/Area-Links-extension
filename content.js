@@ -14,28 +14,33 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     currentSelectionStyle = request.style;
     sendResponse({ success: true });
   }
+
   if (request.type === "copyLastSelectedLinks") {
-    if (lastSelectedLinks.length > 0) {
+    if (lastSelectedLinks.length) {
       copyLinksToClipboard(lastSelectedLinks);
       sendResponse({ success: true });
     } else {
       sendResponse({ success: false });
     }
   }
+
   return true;
 });
 
 document.addEventListener('mousedown', e => {
   if (e.button !== 0 || !isSelectionModeActive) return;
+  
   e.preventDefault();
   isSelecting = true;
   startCoords = { x: e.clientX, y: e.clientY };
+  
   if (!selectionBox) {
     selectionBox = document.createElement('div');
     selectionBox.id = 'link-opener-selection-box';
     selectionBox.className = currentSelectionStyle;
     document.body.appendChild(selectionBox);
   }
+  
   updateSelectionBox(e);
 });
 
@@ -44,11 +49,13 @@ document.addEventListener('mousemove', e => {
   updateSelectionBox(e);
 });
 
-document.addEventListener('mouseup', e => {
+document.addEventListener('mouseup', async e => {
   if (e.button !== 0 || !isSelecting) return;
+  
   isSelecting = false;
   isSelectionModeActive = false;
   document.body.style.cursor = 'default';
+  
   const endCoords = { x: e.clientX, y: e.clientY };
   const selectionRect = {
     left: Math.min(startCoords.x, endCoords.x),
@@ -56,85 +63,68 @@ document.addEventListener('mouseup', e => {
     right: Math.max(startCoords.x, endCoords.x),
     bottom: Math.max(startCoords.y, endCoords.y)
   };
+  
   if (selectionBox) {
     document.body.removeChild(selectionBox);
     selectionBox = null;
   }
-  if (
-    selectionRect.right - selectionRect.left > 5 &&
-    selectionRect.bottom - selectionRect.top > 5
-  ) {
+  
+  if (selectionRect.right - selectionRect.left > 5 && selectionRect.bottom - selectionRect.top > 5) {
+    let links = getLinksInArea(selectionRect);
+    lastSelectedLinks = links.slice();
+    
     if (isCopyMode) {
-      const links = findLinksInArea(selectionRect);
-      lastSelectedLinks = links.slice();
-      if (links.length > 0) {
+      if (links.length) {
+        const settings = await chrome.storage.sync.get(['checkDuplicatesOnCopy']);
+        const { checkDuplicatesOnCopy = true } = settings;
+        if (checkDuplicatesOnCopy) {
+          links = Array.from(new Set(links));
+        }
         copyLinksToClipboard(links);
       }
-    } else {
-      findAndSendLinks(selectionRect);
+    } else if (links.length) {
+      chrome.runtime.sendMessage({ type: "openLinks", urls: links });
     }
   }
 });
 
 function updateSelectionBox(e) {
-  const currentCoords = { x: e.clientX, y: e.clientY };
-  const left = Math.min(startCoords.x, currentCoords.x);
-  const top = Math.min(startCoords.y, currentCoords.y);
-  const width = Math.abs(startCoords.x - currentCoords.x);
-  const height = Math.abs(startCoords.y - currentCoords.y);
-  selectionBox.style.left = `${left}px`;
-  selectionBox.style.top = `${top}px`;
-  selectionBox.style.width = `${width}px`;
-  selectionBox.style.height = `${height}px`;
+  const { x, y } = e;
+  const left = Math.min(startCoords.x, x);
+  const top = Math.min(startCoords.y, y);
+  const width = Math.abs(startCoords.x - x);
+  const height = Math.abs(startCoords.y - y);
+  
+  Object.assign(selectionBox.style, {
+    left: `${left}px`,
+    top: `${top}px`,
+    width: `${width}px`,
+    height: `${height}px`
+  });
 }
 
-function findAndSendLinks(selectionRect) {
-  const allLinks = document.querySelectorAll('a[href]');
-  const linksInArea = [];
-  allLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-    const linkRect = link.getBoundingClientRect();
-    if (
-      linkRect.width > 0 &&
-      linkRect.height > 0 &&
-      linkRect.left < selectionRect.right &&
-      linkRect.right > selectionRect.left &&
-      linkRect.top < selectionRect.bottom &&
-      linkRect.bottom > selectionRect.top
-    ) {
-      linksInArea.push(link.href);
-    }
-  });
-  lastSelectedLinks = linksInArea.slice();
-  if (linksInArea.length > 0) {
-    chrome.runtime.sendMessage({ type: "openLinks", urls: linksInArea });
-  }
-}
-
-function findLinksInArea(selectionRect) {
-  const allLinks = document.querySelectorAll('a[href]');
-  const linksInArea = [];
-  allLinks.forEach(link => {
-    const href = link.getAttribute('href');
-    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-    const linkRect = link.getBoundingClientRect();
-    if (
-      linkRect.width > 0 &&
-      linkRect.height > 0 &&
-      linkRect.left < selectionRect.right &&
-      linkRect.right > selectionRect.left &&
-      linkRect.top < selectionRect.bottom &&
-      linkRect.bottom > selectionRect.top
-    ) {
-      linksInArea.push(link.href);
-    }
-  });
-  return linksInArea;
+function getLinksInArea(rect) {
+  return Array.from(document.querySelectorAll('a[href]'))
+    .filter(link => {
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return false;
+      
+      const r = link.getBoundingClientRect();
+      return (
+        r.width > 0 &&
+        r.height > 0 &&
+        r.left < rect.right &&
+        r.right > rect.left &&
+        r.top < rect.bottom &&
+        r.bottom > rect.top
+      );
+    })
+    .map(link => link.href);
 }
 
 function copyLinksToClipboard(links) {
   const text = links.join('\n');
+  
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(text);
   } else {
@@ -144,9 +134,11 @@ function copyLinksToClipboard(links) {
     document.body.appendChild(textarea);
     textarea.focus();
     textarea.select();
-    try {
-      document.execCommand('copy');
+    
+    try { 
+      document.execCommand('copy'); 
     } catch {}
+    
     document.body.removeChild(textarea);
   }
 }

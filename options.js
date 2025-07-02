@@ -11,23 +11,23 @@ function saveOptions() {
   const excludedWords = document.getElementById('excludedWords').value;
   const tabLimit = parseInt(document.getElementById('tabLimit').value, 10);
   const useHistory = document.getElementById('useHistory').checked;
+  const checkDuplicatesOnCopy = document.getElementById('checkDuplicatesOnCopy').checked;
   const selectionStyle = document.getElementById('selectionStyle').value;
   const openInNewWindow = document.getElementById('openInNewWindow').checked;
   const reverseOrder = document.getElementById('reverseOrder').checked;
-
+  
   chrome.storage.sync.set(
     {
       excludedDomains,
       excludedWords,
       tabLimit,
       useHistory,
+      checkDuplicatesOnCopy,
       selectionStyle,
       openInNewWindow,
       reverseOrder
     },
-    () => {
-      showStatus('Options saved.');
-    }
+    () => showStatus('Options saved.')
   );
 }
 
@@ -38,6 +38,7 @@ function restoreOptions() {
       excludedWords: '',
       tabLimit: 15,
       useHistory: true,
+      checkDuplicatesOnCopy: true,
       selectionStyle: 'classic-blue',
       openInNewWindow: false,
       reverseOrder: false
@@ -47,6 +48,7 @@ function restoreOptions() {
       document.getElementById('excludedWords').value = items.excludedWords;
       document.getElementById('tabLimit').value = items.tabLimit;
       document.getElementById('useHistory').checked = items.useHistory;
+      document.getElementById('checkDuplicatesOnCopy').checked = items.checkDuplicatesOnCopy;
       document.getElementById('selectionStyle').value = items.selectionStyle;
       document.getElementById('openInNewWindow').checked = items.openInNewWindow;
       document.getElementById('reverseOrder').checked = items.reverseOrder;
@@ -64,12 +66,21 @@ function openShortcuts() {
   chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
 }
 
-document.addEventListener('DOMContentLoaded', restoreOptions);
-document.getElementById('save').addEventListener('click', saveOptions);
-document.getElementById('clearHistory').addEventListener('click', clearHistory);
-document.getElementById('shortcutsLink').addEventListener('click', openShortcuts);
-
 document.addEventListener('DOMContentLoaded', () => {
+  restoreOptions();
+  
+  document.getElementById('save').addEventListener('click', saveOptions);
+  document.getElementById('clearHistory').addEventListener('click', clearHistory);
+  document.getElementById('shortcutsLink').addEventListener('click', openShortcuts);
+  
+  document.getElementById('clearExcludedDomains').addEventListener('click', () => {
+    document.getElementById('excludedDomains').value = '';
+  });
+  
+  document.getElementById('clearExcludedWords').addEventListener('click', () => {
+    document.getElementById('excludedWords').value = '';
+  });
+  
   const versionElem = document.getElementById('ext-version');
   if (versionElem) {
     versionElem.textContent = 'v' + chrome.runtime.getManifest().version;

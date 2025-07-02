@@ -6,40 +6,30 @@ chrome.runtime.onInstalled.addListener(() => {
     tabLimit: 15,
     linkHistory: [],
     useHistory: true,
-    selectionStyle: 'classic-blue'
+    selectionStyle: 'classic-blue',
+    checkDuplicatesOnCopy: true
   });
 });
 
-chrome.action.onClicked.addListener(() => {
-  chrome.runtime.openOptionsPage();
-});
+chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
-  if (
-    (command === "activate-selection" || command === "activate-selection-copy") &&
-    tab.url &&
-    (tab.url.startsWith('http://') || tab.url.startsWith('https://'))
-  ) {
-    const { selectionStyle } = await chrome.storage.sync.get('selectionStyle');
+  if ((command === "activate-selection" || command === "activate-selection-copy") && tab.url?.startsWith('http')) {
+    const { selectionStyle = 'classic-blue' } = await chrome.storage.sync.get('selectionStyle');
+    
     chrome.tabs.sendMessage(
       tab.id,
       {
         type: command === "activate-selection" ? "initiateSelection" : "initiateSelectionCopy",
-        style: selectionStyle || 'classic-blue'
+        style: selectionStyle
       },
       () => {
         if (chrome.runtime.lastError) {
-          console.warn(
-            "Could not establish connection. Is the page reloading?",
-            chrome.runtime.lastError.message
-          );
+          console.warn("Could not establish connection. Is the page reloading?", chrome.runtime.lastError.message);
         }
       }
     );
-  } else if (
-    command === "activate-selection" ||
-    command === "activate-selection-copy"
-  ) {
+  } else if (command === "activate-selection" || command === "activate-selection-copy") {
     console.log("Area Links: Cannot activate on this page (e.g., chrome:// or New Tab Page).");
   }
 });
@@ -49,6 +39,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     processLinks(request.urls);
     return true;
   }
+  
   if (request.type === "clearHistory") {
     chrome.storage.sync.set({ linkHistory: [] }, () => {
       sendResponse({ success: true, message: 'History cleared!' });
@@ -67,55 +58,48 @@ async function processLinks(urls) {
     'openInNewWindow',
     'reverseOrder'
   ]);
-
-  const excludedDomains = settings.excludedDomains
-    ? settings.excludedDomains.split(',').map(d => d.trim().toLowerCase()).filter(Boolean)
-    : [];
-  const excludedWords = settings.excludedWords
-    ? settings.excludedWords.split(',').map(w => w.trim().toLowerCase()).filter(Boolean)
-    : [];
-  const tabLimit = settings.tabLimit || 15;
-  const linkHistory = settings.linkHistory || [];
-  const useHistory = settings.useHistory !== false;
-  const openInNewWindow = !!settings.openInNewWindow;
-  const reverseOrder = !!settings.reverseOrder;
-
+  
+  const {
+    excludedDomains = '',
+    excludedWords = '',
+    tabLimit = 15,
+    linkHistory = [],
+    useHistory = true,
+    openInNewWindow = false,
+    reverseOrder = false
+  } = settings;
+  
+  const domains = excludedDomains.split(',').map(d => d.trim().toLowerCase()).filter(Boolean);
+  const words = excludedWords.split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+  
   let uniqueUrls = Array.from(new Set(urls));
-
-  if (reverseOrder) {
-    uniqueUrls.reverse();
-  }
-
+  if (reverseOrder) uniqueUrls.reverse();
+  
   const filteredUrls = uniqueUrls.filter(url => {
-    if (useHistory && linkHistory.includes(url)) {
-      return false;
-    }
+    if (useHistory && linkHistory.includes(url)) return false;
+    
     try {
       const hostname = new URL(url).hostname.toLowerCase();
-      if (excludedDomains.some(domain => hostname.includes(domain))) {
-        return false;
-      }
-      if (excludedWords.some(word => word && url.toLowerCase().includes(word))) {
-        return false;
-      }
+      if (domains.some(domain => hostname.includes(domain))) return false;
+      if (words.some(word => word && url.toLowerCase().includes(word))) return false;
     } catch {
       return false;
     }
+    
     return true;
   });
-
+  
   const urlsToOpen = filteredUrls.slice(0, tabLimit);
-
-  if (openInNewWindow && urlsToOpen.length > 0) {
+  
+  if (openInNewWindow && urlsToOpen.length) {
     chrome.windows.create({ url: urlsToOpen, focused: true });
   } else {
-    urlsToOpen.forEach(url => {
-      chrome.tabs.create({ url, active: false });
-    });
+    urlsToOpen.forEach(url => chrome.tabs.create({ url, active: false }));
   }
-
-  if (useHistory && urlsToOpen.length > 0) {
-    const newHistory = [...urlsToOpen, ...linkHistory].slice(0, HISTORY_LIMIT);
-    chrome.storage.sync.set({ linkHistory: newHistory });
+  
+  if (useHistory && urlsToOpen.length) {
+    chrome.storage.sync.set({ 
+      linkHistory: [...urlsToOpen, ...linkHistory].slice(0, HISTORY_LIMIT) 
+    });
   }
 }
