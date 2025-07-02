@@ -1,4 +1,4 @@
-# 🌐 Area Links
+# Area Links
 
 > **Select. Open. Done.** - A Chrome extension to select an area on a webpage and open or copy all links within it.
 
