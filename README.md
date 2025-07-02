@@ -40,7 +40,7 @@ Customize shortcuts at `chrome://extensions/shortcuts`:
 
 ### Installation
 
-1. **Download [LATEST RELEASE](https://github.com/le0booba/Area_Links/releases) from GitHub.**
+1. **Download [LATEST RELEASE](https://github.com/le0booba/Area_Links/releases/latest) from GitHub.**
 
 2. **Load in Chrome:**
    - Navigate to `chrome://extensions/`
@@ -108,10 +108,10 @@ Area_Links/
 ├── ⚙️ popup.html           # Quick settings popup
 ├── ⚙️ popup.js             # Popup functionality
 ├── 🖺 README.md            # This file
-└── 🗁 icons/ 🖼️            # Extension icons
-    ├── icon16.png
-    ├── icon48.png
-    ├── icon128.png
+└── 🗁 icons/               # Extension icons
+    ├── 🖼️ icon16.png
+    ├── 🖼️ icon48.png
+    ├── 🖼️ icon128.png
     └── peace.jpg
 ```
 
