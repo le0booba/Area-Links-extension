@@ -108,10 +108,10 @@ Area_Links/
 ├── ⚙️ popup.html           # Quick settings popup
 ├── ⚙️ popup.js             # Popup functionality
 ├── 🖺 README.md            # This file
-└── 🗁 icons/ 🖼️            # Extension icons
-    ├── icon16.png
-    ├── icon48.png
-    ├── icon128.png
+└── 🗁 icons/               # Extension icons
+    ├── 🖼️ icon16.png
+    ├── 🖼️ icon48.png
+    ├── 🖼️ icon128.png
     └── peace.jpg
 ```
 
