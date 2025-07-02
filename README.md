@@ -41,7 +41,7 @@ Customize shortcuts at `chrome://extensions/shortcuts`:
 
 ### Installation
 
-1. **Download [LATEST RELEASE](https://github.com/le0booba/Area_Links/releases) from GitHub:**
+1. **Download [LATEST RELEASE](https://github.com/le0booba/Area_Links/releases) from GitHub.**
 
 2. **Load in Chrome:**
    - Navigate to `chrome://extensions/`
