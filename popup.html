@@ -59,13 +59,26 @@
       font-family: Verdana, Geneva, Tahoma, sans-serif;
       letter-spacing: 1px;
     }
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    #status263 {
+      color: green;
+      font-size: 1.4em;
+      margin-top: 8px;
+      margin-bottom: 8px;
+      height: 1.3em;
+      text-align: center;
+      line-height: 1.3em;
+      font-family: monospace;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
   </style>
-</head>
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Quick Settings</title>
-  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="header-container">
@@ -84,7 +97,7 @@
   <div>
     <label><input type="checkbox" id="popup-checkDuplicatesOnCopy"> Remove duplicates when copying links</label>
   </div>
-  <div>
+  <div style="margin-top: 18px;">
     <button id="open-options">Open Full Settings</button>
   </div>
   <script src="popup.js"></script>
