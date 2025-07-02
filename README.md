@@ -97,6 +97,29 @@ Excluded Words: login, logout, unsubscribe, signup
 
 ---
 
+## 🔒 Privacy & Permissions
+
+<details>
+<summary>Required Permissions</summary>
+
+| Permission | Purpose |
+|------------|---------|
+| `storage` | Save your settings and link history |
+| `tabs` | Open new tabs and manage windows |
+| `scripting` | Inject selection interface into web pages |
+| `<all_urls>` | Work on all websites you visit |
+
+</details>
+
+### Data Handling
+- **🏠 Local Storage:** All settings stored locally via `chrome.storage.sync`
+- **🚫 No Tracking:** Zero analytics, telemetry, or user data collection
+- **🔒 No External Requests:** Extension operates entirely offline
+
+*We only request permissions essential for core functionality.*
+
+---
+
 ## 🛠️ Troubleshooting
 
 ### Common Issues
@@ -118,29 +141,6 @@ Excluded Words: login, logout, unsubscribe, signup
 4. **Reset settings:** Use "Clear History" button in options
 
 </details>
-
----
-
-## 🔒 Privacy & Permissions
-
-<details>
-<summary>Required Permissions</summary>
-
-| Permission | Purpose |
-|------------|---------|
-| `storage` | Save your settings and link history |
-| `tabs` | Open new tabs and manage windows |
-| `scripting` | Inject selection interface into web pages |
-| `<all_urls>` | Work on all websites you visit |
-
-</details>
-
-### Data Handling
-- **🏠 Local Storage:** All settings stored locally via `chrome.storage.sync`
-- **🚫 No Tracking:** Zero analytics, telemetry, or user data collection
-- **🔒 No External Requests:** Extension operates entirely offline
-
-*We only request permissions essential for core functionality.*
 
 ---
 
