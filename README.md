@@ -147,5 +147,5 @@ Excluded Words: login, logout, unsubscribe, signup
 <div align="center">
 <sup>⭐ Enjoy the extension? Give it a star!</sup>
 
-**© badrenton 2025** | Made with ❤️ for productivity
+**© badrenton 2025** | Made with 🖤 for productivity
 </div>
