@@ -1,6 +1,6 @@
 # Area Links
 
-![demo](https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/ezgif-6a4a030d4868d5.gif)
+<img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/ezgif-7d032379f37497.gif" alt="Databay showcase gif" title="Databay showcase gif" width="450"/>
 
 > **Select. Open. Done.** A Chrome extension to select an area on a webpage and open or copy all links within it.
 <br>
