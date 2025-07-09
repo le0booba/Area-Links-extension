@@ -1,6 +1,6 @@
 # Area Links
 
-![demo](https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/demo.gif)
+![demo](https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/ezgif-6a4a030d4868d5.gif)
 
 > **Select. Open. Done.** A Chrome extension to select an area on a webpage and open or copy all links within it.
 <br>
