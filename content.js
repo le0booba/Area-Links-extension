@@ -1,144 +1,182 @@
-let isSelectionModeActive = false;
-let isSelecting = false;
-let startCoords = { x: 0, y: 0 };
-let selectionBox = null;
-let currentSelectionStyle = 'classic-blue';
-let isCopyMode = false;
-let lastSelectedLinks = [];
+const svgCursor = `
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <line x1="16" y1="0" x2="16" y2="32" stroke="black" stroke-width="1.5"/>
+  <line x1="0" y1="16" x2="32" y2="16" stroke="black" stroke-width="1.5"/>
+  <rect x="20" y="20" width="10" height="10" fill="white" />
+  <line x1="25" y1="21" x2="25" y2="29" stroke="black" stroke-width="2"/>
+  <line x1="21" y1="25" x2="29" y2="25" stroke="black" stroke-width="2"/>
+</svg>`;
+const customCopyCursor = `url('data:image/svg+xml;utf8,${encodeURIComponent(svgCursor)}') 16 16, copy`;
+
+
+const selectionState = {
+  isActive: false,
+  isSelecting: false,
+  isCopyMode: false,
+  selectionBox: null,
+  style: 'classic-blue',
+  startCoords: { x: 0, y: 0 },
+};
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === "initiateSelection" || request.type === "initiateSelectionCopy") {
-    isSelectionModeActive = true;
-    isCopyMode = request.type === "initiateSelectionCopy";
-    document.body.style.cursor = 'crosshair';
-    currentSelectionStyle = request.style;
-    sendResponse({ success: true });
-  }
+    const newIsCopyMode = request.type === "initiateSelectionCopy";
 
-  if (request.type === "copyLastSelectedLinks") {
-    if (lastSelectedLinks.length) {
-      copyLinksToClipboard(lastSelectedLinks);
-      sendResponse({ success: true });
-    } else {
-      sendResponse({ success: false });
+    if (selectionState.isActive) {
+      selectionState.isCopyMode = newIsCopyMode;
+      document.body.style.cursor = newIsCopyMode ? customCopyCursor : 'crosshair'; 
+      sendResponse({ success: true, message: "Mode switched" });
+      return true;
     }
+    
+    selectionState.isActive = true;
+    selectionState.isCopyMode = newIsCopyMode;
+    selectionState.style = request.style;
+    document.body.style.cursor = newIsCopyMode ? customCopyCursor : 'crosshair'; 
+    
+    document.addEventListener('mousedown', handleMouseDown, true);
+    document.addEventListener('keydown', handleKeyDown, true); 
+    
+    sendResponse({ success: true, message: "Selection initiated" });
   }
-
-  return true;
+  return true; 
 });
 
-document.addEventListener('mousedown', e => {
-  if (e.button !== 0 || !isSelectionModeActive) return;
-  
-  e.preventDefault();
-  isSelecting = true;
-  startCoords = { x: e.clientX, y: e.clientY };
-  
-  if (!selectionBox) {
-    selectionBox = document.createElement('div');
-    selectionBox.id = 'link-opener-selection-box';
-    selectionBox.className = currentSelectionStyle;
-    document.body.appendChild(selectionBox);
+function resetSelection() {
+  if (selectionState.selectionBox) {
+    selectionState.selectionBox.remove();
   }
-  
-  updateSelectionBox(e);
-});
-
-document.addEventListener('mousemove', e => {
-  if (!isSelecting) return;
-  updateSelectionBox(e);
-});
-
-document.addEventListener('mouseup', async e => {
-  if (e.button !== 0 || !isSelecting) return;
-  
-  isSelecting = false;
-  isSelectionModeActive = false;
   document.body.style.cursor = 'default';
   
-  const endCoords = { x: e.clientX, y: e.clientY };
-  const selectionRect = {
-    left: Math.min(startCoords.x, endCoords.x),
-    top: Math.min(startCoords.y, endCoords.y),
-    right: Math.max(startCoords.x, endCoords.x),
-    bottom: Math.max(startCoords.y, endCoords.y)
-  };
+  document.removeEventListener('mousedown', handleMouseDown, true);
+  document.removeEventListener('mousemove', handleMouseMove, true);
+  document.removeEventListener('mouseup', handleMouseUp, true);
+  document.removeEventListener('keydown', handleKeyDown, true); 
   
-  if (selectionBox) {
-    document.body.removeChild(selectionBox);
-    selectionBox = null;
-  }
-  
-  if (selectionRect.right - selectionRect.left > 5 && selectionRect.bottom - selectionRect.top > 5) {
-    let links = getLinksInArea(selectionRect);
-    lastSelectedLinks = links.slice();
-    
-    if (isCopyMode) {
-      if (links.length) {
-        const settings = await chrome.storage.sync.get(['checkDuplicatesOnCopy']);
-        const { checkDuplicatesOnCopy = true } = settings;
-        if (checkDuplicatesOnCopy) {
-          links = Array.from(new Set(links));
-        }
-        copyLinksToClipboard(links);
-      }
-    } else if (links.length) {
-      chrome.runtime.sendMessage({ type: "openLinks", urls: links });
-    }
-  }
-});
-
-function updateSelectionBox(e) {
-  const { x, y } = e;
-  const left = Math.min(startCoords.x, x);
-  const top = Math.min(startCoords.y, y);
-  const width = Math.abs(startCoords.x - x);
-  const height = Math.abs(startCoords.y - y);
-  
-  Object.assign(selectionBox.style, {
-    left: `${left}px`,
-    top: `${top}px`,
-    width: `${width}px`,
-    height: `${height}px`
+  Object.assign(selectionState, {
+    isActive: false,
+    isSelecting: false,
+    isCopyMode: false,
+    selectionBox: null,
+    startCoords: { x: 0, y: 0 },
   });
 }
 
-function getLinksInArea(rect) {
+function handleKeyDown(e) {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    e.stopPropagation();
+    resetSelection();
+  }
+}
+
+function handleMouseDown(e) {
+  if (e.button !== 0) return;
+  
+  e.preventDefault();
+  e.stopPropagation();
+
+  selectionState.isSelecting = true;
+  selectionState.startCoords = { x: e.clientX, y: e.clientY };
+  
+  selectionState.selectionBox = document.createElement('div');
+  selectionState.selectionBox.id = 'link-opener-selection-box';
+  selectionState.selectionBox.className = selectionState.style;
+  document.body.appendChild(selectionState.selectionBox);
+  
+  updateSelectionBox(e.clientX, e.clientY);
+
+  document.addEventListener('mousemove', handleMouseMove, true);
+  document.addEventListener('mouseup', handleMouseUp, true);
+}
+
+function handleMouseMove(e) {
+  if (!selectionState.isSelecting) return;
+  updateSelectionBox(e.clientX, e.clientY);
+}
+
+async function handleMouseUp(e) {
+  if (e.button !== 0) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const endCoords = { x: e.clientX, y: e.clientY };
+  const selectionRect = getSelectionRectangle(selectionState.startCoords, endCoords);
+
+  if (selectionRect.width > 5 && selectionRect.height > 5) {
+    let links = getLinksInArea(selectionRect);
+    
+    if (links.length > 0) {
+      if (selectionState.isCopyMode) {
+        const { checkDuplicatesOnCopy } = await chrome.storage.sync.get({ checkDuplicatesOnCopy: true });
+        if (checkDuplicatesOnCopy) {
+          links = [...new Set(links)];
+        }
+        copyLinksToClipboard(links);
+      } else {
+        chrome.runtime.sendMessage({ type: "openLinks", urls: links });
+      }
+    }
+  }
+
+  resetSelection();
+}
+
+function updateSelectionBox(currentX, currentY) {
+  if (!selectionState.selectionBox) return;
+  const rect = getSelectionRectangle(selectionState.startCoords, { x: currentX, y: currentY });
+  
+  Object.assign(selectionState.selectionBox.style, {
+    left: `${rect.x}px`, top: `${rect.y}px`,
+    width: `${rect.width}px`, height: `${rect.height}px`
+  });
+}
+
+function getSelectionRectangle(start, end) {
+  const x = Math.min(start.x, end.x);
+  const y = Math.min(start.y, end.y);
+  const width = Math.abs(start.x - end.x);
+  const height = Math.abs(start.y - end.y);
+  return { x, y, width, height };
+}
+
+function getLinksInArea(clientRect) {
+  const selectionRect = {
+    left: clientRect.x, top: clientRect.y,
+    right: clientRect.x + clientRect.width, bottom: clientRect.y + clientRect.height
+  };
+
   return Array.from(document.querySelectorAll('a[href]'))
     .filter(link => {
       const href = link.getAttribute('href');
       if (!href || href.startsWith('#') || href.startsWith('javascript:')) return false;
-      
+
       const r = link.getBoundingClientRect();
-      return (
-        r.width > 0 &&
-        r.height > 0 &&
-        r.left < rect.right &&
-        r.right > rect.left &&
-        r.top < rect.bottom &&
-        r.bottom > rect.top
-      );
+      return r.width > 0 && r.height > 0 &&
+             r.left < selectionRect.right && r.right > selectionRect.left &&
+             r.top < selectionRect.bottom && r.bottom > selectionRect.top;
     })
-    .map(link => link.href);
+    .map(link => link.href); 
 }
 
 function copyLinksToClipboard(links) {
   const text = links.join('\n');
   
   if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).catch(err => console.error('Area Links: Could not copy text.', err));
   } else {
     const textarea = document.createElement('textarea');
     textarea.value = text;
-    textarea.style.position = 'fixed';
+    textarea.style.position = 'fixed'; 
+    textarea.style.opacity = '0'; 
     document.body.appendChild(textarea);
-    textarea.focus();
     textarea.select();
-    
     try { 
       document.execCommand('copy'); 
-    } catch {}
-    
+    } catch (err) {
+      console.error('Area Links: Fallback copy method failed.', err);
+    }
     document.body.removeChild(textarea);
   }
 }

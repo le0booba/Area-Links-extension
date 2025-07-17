@@ -125,8 +125,13 @@
     .icon-btn:hover {
       background: #e0e0e0;
     }
-    .icon-btn svg {
-      pointer-events: none;
+    .icon-btn:disabled {
+      cursor: auto;
+      background: #f8f9fa;
+      opacity: 0.6;
+    }
+    .icon-btn:disabled:hover {
+       background: #f8f9fa;
     }
   </style>
 </head>
@@ -181,17 +186,21 @@
       <button id="clearHistory">Clear History</button>
     </div>
 
-    <div>
+    <div style="margin-bottom: 20px;">
       <label style="display: inline-block; font-weight: normal;"><input type="checkbox" id="checkDuplicatesOnCopy">Remove duplicates when copying links</label>
     </div>
 
-    <div style="margin-top: 15px;">
-      <input type="checkbox" id="openInNewWindow">
-      <label for="openInNewWindow" style="display: inline-block; font-weight: normal;">Open in new window</label>
-    </div>
     <div style="margin-top: 10px;">
-      <input type="checkbox" id="reverseOrder">
-      <label for="reverseOrder" style="display: inline-block; font-weight: normal;">Open in reverse order</label>
+      <label for="openInNewWindow" style="display: inline-block; font-weight: normal;">
+        <input type="checkbox" id="openInNewWindow">
+        Open in new window
+      </label>
+    </div>
+    <div style="margin-top: 10px; margin-bottom: 20px;">
+      <label for="reverseOrder" style="display: inline-block; font-weight: normal;">
+        <input type="checkbox" id="reverseOrder">
+        Open in reverse order
+      </label>
     </div>
     <button id="save">Save Settings</button>
     <div id="status"></div>

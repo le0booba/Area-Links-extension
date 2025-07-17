@@ -1,105 +1,87 @@
 const HISTORY_LIMIT = 15;
+const DEFAULT_SETTINGS = {
+  excludedDomains: '',
+  excludedWords: '',
+  tabLimit: 15,
+  linkHistory: [],
+  useHistory: true,
+  selectionStyle: 'classic-blue',
+  checkDuplicatesOnCopy: true,
+  openInNewWindow: false,
+  reverseOrder: false
+};
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.sync.set({
-    excludedDomains: '',
-    tabLimit: 15,
-    linkHistory: [],
-    useHistory: true,
-    selectionStyle: 'classic-blue',
-    checkDuplicatesOnCopy: true
-  });
+  chrome.storage.sync.set(DEFAULT_SETTINGS);
 });
-
-chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
 chrome.commands.onCommand.addListener(async (command, tab) => {
   if ((command === "activate-selection" || command === "activate-selection-copy") && tab.url?.startsWith('http')) {
-    const { selectionStyle = 'classic-blue' } = await chrome.storage.sync.get('selectionStyle');
+    const { selectionStyle } = await chrome.storage.sync.get({
+      selectionStyle: DEFAULT_SETTINGS.selectionStyle
+    });
     
-    chrome.tabs.sendMessage(
-      tab.id,
-      {
-        type: command === "activate-selection" ? "initiateSelection" : "initiateSelectionCopy",
-        style: selectionStyle
-      },
-      () => {
-        if (chrome.runtime.lastError) {
-          console.warn("Could not establish connection. Is the page reloading?", chrome.runtime.lastError.message);
-        }
-      }
-    );
+    chrome.tabs.sendMessage(tab.id, {
+      type: command === "activate-selection" ? "initiateSelection" : "initiateSelectionCopy",
+      style: selectionStyle
+    }).catch(error => {
+      console.warn(`Area Links: Could not establish connection with content script. ${error.message}`);
+    });
   } else if (command === "activate-selection" || command === "activate-selection-copy") {
-    console.log("Area Links: Cannot activate on this page (e.g., chrome:// or New Tab Page).");
+    console.log("Area Links: Cannot activate on non-http pages (e.g., chrome://, New Tab Page).");
   }
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === "openLinks") {
-    processLinks(request.urls);
-    return true;
+  switch (request.type) {
+    case "openLinks":
+      processLinks(request.urls);
+      return false;
+    
+    case "clearHistory":
+      chrome.storage.sync.set({ linkHistory: [] })
+        .then(() => sendResponse({ success: true, message: 'History cleared!' }))
+        .catch(err => sendResponse({ success: false, message: err.message }));
+      return true;
   }
-  
-  if (request.type === "clearHistory") {
-    chrome.storage.sync.set({ linkHistory: [] }, () => {
-      sendResponse({ success: true, message: 'History cleared!' });
-    });
-    return true;
-  }
+  return false;
 });
 
 async function processLinks(urls) {
-  const settings = await chrome.storage.sync.get([
-    'excludedDomains',
-    'excludedWords',
-    'tabLimit',
-    'linkHistory',
-    'useHistory',
-    'openInNewWindow',
-    'reverseOrder'
-  ]);
+  const settings = await chrome.storage.sync.get(DEFAULT_SETTINGS);
   
-  const {
-    excludedDomains = '',
-    excludedWords = '',
-    tabLimit = 15,
-    linkHistory = [],
-    useHistory = true,
-    openInNewWindow = false,
-    reverseOrder = false
-  } = settings;
-  
-  const domains = excludedDomains.split(',').map(d => d.trim().toLowerCase()).filter(Boolean);
-  const words = excludedWords.split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
-  
-  let uniqueUrls = Array.from(new Set(urls));
-  if (reverseOrder) uniqueUrls.reverse();
-  
+  const excludedDomains = settings.excludedDomains.split(',').map(d => d.trim().toLowerCase()).filter(Boolean);
+  const excludedWords = settings.excludedWords.split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
+
+  let uniqueUrls = [...new Set(urls)];
+  if (settings.reverseOrder) uniqueUrls.reverse();
+
   const filteredUrls = uniqueUrls.filter(url => {
-    if (useHistory && linkHistory.includes(url)) return false;
+    if (settings.useHistory && settings.linkHistory.includes(url)) return false;
     
     try {
-      const hostname = new URL(url).hostname.toLowerCase();
-      if (domains.some(domain => hostname.includes(domain))) return false;
-      if (words.some(word => word && url.toLowerCase().includes(word))) return false;
+      const urlHostname = new URL(url).hostname.toLowerCase();
+      if (excludedDomains.some(domain => urlHostname.includes(domain))) return false;
+      if (excludedWords.some(word => url.toLowerCase().includes(word))) return false;
     } catch {
       return false;
     }
     
     return true;
   });
+
+  const urlsToOpen = filteredUrls.slice(0, settings.tabLimit);
   
-  const urlsToOpen = filteredUrls.slice(0, tabLimit);
-  
-  if (openInNewWindow && urlsToOpen.length) {
+  if (urlsToOpen.length === 0) return;
+
+  if (settings.openInNewWindow) {
     chrome.windows.create({ url: urlsToOpen, focused: true });
   } else {
     urlsToOpen.forEach(url => chrome.tabs.create({ url, active: false }));
   }
-  
-  if (useHistory && urlsToOpen.length) {
-    chrome.storage.sync.set({ 
-      linkHistory: [...urlsToOpen, ...linkHistory].slice(0, HISTORY_LIMIT) 
-    });
+
+  if (settings.useHistory) {
+    const newHistory = [...urlsToOpen, ...settings.linkHistory].slice(0, HISTORY_LIMIT);
+    chrome.storage.sync.set({ linkHistory: newHistory });
   }
 }
