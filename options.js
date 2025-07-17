@@ -1,3 +1,6 @@
+const SYNC_SETTINGS_KEYS = ['excludedDomains', 'excludedWords', 'tabLimit', 'selectionStyle', 'openInNewWindow', 'reverseOrder'];
+const LOCAL_SETTINGS_KEYS = ['useHistory', 'checkDuplicatesOnCopy'];
+
 const DEFAULT_SETTINGS = {
   excludedDomains: '',
   excludedWords: '',
@@ -17,6 +20,11 @@ function showStatus(message, duration = 2500) {
   }, duration);
 }
 
+function updateClearButtonsState() {
+  document.getElementById('clearExcludedDomains').disabled = document.getElementById('excludedDomains').value.trim() === '';
+  document.getElementById('clearExcludedWords').disabled = document.getElementById('excludedWords').value.trim() === '';
+}
+
 function saveOptions() {
   const settingsToSave = {
     excludedDomains: document.getElementById('excludedDomains').value.trim(),
@@ -28,33 +36,55 @@ function saveOptions() {
     openInNewWindow: document.getElementById('openInNewWindow').checked,
     reverseOrder: document.getElementById('reverseOrder').checked,
   };
+
+  const syncSettings = {};
+  const localSettings = {};
+
+  SYNC_SETTINGS_KEYS.forEach(key => syncSettings[key] = settingsToSave[key]);
+  LOCAL_SETTINGS_KEYS.forEach(key => localSettings[key] = settingsToSave[key]);
   
-  chrome.storage.sync.set(settingsToSave, () => showStatus('Options saved.'));
+  Promise.all([
+    chrome.storage.sync.set(syncSettings),
+    chrome.storage.local.set(localSettings)
+  ]).then(() => {
+    showStatus('Options saved.');
+  });
 }
 
-function restoreOptions() {
-  chrome.storage.sync.get(DEFAULT_SETTINGS, items => {
-    document.getElementById('excludedDomains').value = items.excludedDomains;
-    document.getElementById('excludedWords').value = items.excludedWords;
-    document.getElementById('tabLimit').value = items.tabLimit;
-    document.getElementById('useHistory').checked = items.useHistory;
-    document.getElementById('checkDuplicatesOnCopy').checked = items.checkDuplicatesOnCopy;
-    document.getElementById('selectionStyle').value = items.selectionStyle;
-    document.getElementById('openInNewWindow').checked = items.openInNewWindow;
-    document.getElementById('reverseOrder').checked = items.reverseOrder;
-    updateClearButtonsState();
+async function restoreOptions() {
+  const syncDefaults = {};
+  SYNC_SETTINGS_KEYS.forEach(key => {
+    syncDefaults[key] = DEFAULT_SETTINGS[key];
   });
+
+  const localDefaults = {};
+  LOCAL_SETTINGS_KEYS.forEach(key => {
+    localDefaults[key] = DEFAULT_SETTINGS[key];
+  });
+
+  const [syncItems, localItems] = await Promise.all([
+      chrome.storage.sync.get(syncDefaults),
+      chrome.storage.local.get(localDefaults)
+  ]);
+  
+  const items = { ...syncItems, ...localItems };
+
+  document.getElementById('excludedDomains').value = items.excludedDomains;
+  document.getElementById('excludedWords').value = items.excludedWords;
+  document.getElementById('tabLimit').value = items.tabLimit;
+  document.getElementById('useHistory').checked = items.useHistory;
+  document.getElementById('checkDuplicatesOnCopy').checked = items.checkDuplicatesOnCopy;
+  document.getElementById('selectionStyle').value = items.selectionStyle;
+  document.getElementById('openInNewWindow').checked = items.openInNewWindow;
+  document.getElementById('reverseOrder').checked = items.reverseOrder;
+  
+  updateClearButtonsState();
 }
 
 function clearHistory() {
   chrome.runtime.sendMessage({ type: "clearHistory" }, response => {
     showStatus(response?.success ? response.message : 'Error clearing history.', 3000);
   });
-}
-
-function updateClearButtonsState() {
-  document.getElementById('clearExcludedDomains').disabled = document.getElementById('excludedDomains').value.trim() === '';
-  document.getElementById('clearExcludedWords').disabled = document.getElementById('excludedWords').value.trim() === '';
 }
 
 document.addEventListener('DOMContentLoaded', () => {

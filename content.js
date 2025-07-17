@@ -16,11 +16,16 @@ const selectionState = {
   selectionBox: null,
   style: 'classic-blue',
   startCoords: { x: 0, y: 0 },
+  checkDuplicatesOnCopy: true,
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === "initiateSelection" || request.type === "initiateSelectionCopy") {
     const newIsCopyMode = request.type === "initiateSelectionCopy";
+    
+    if (request.checkDuplicatesOnCopy !== undefined) {
+      selectionState.checkDuplicatesOnCopy = request.checkDuplicatesOnCopy;
+    }
 
     if (selectionState.isActive) {
       selectionState.isCopyMode = newIsCopyMode;
@@ -59,6 +64,7 @@ function resetSelection() {
     isCopyMode: false,
     selectionBox: null,
     startCoords: { x: 0, y: 0 },
+    checkDuplicatesOnCopy: true,
   });
 }
 
@@ -109,8 +115,7 @@ async function handleMouseUp(e) {
     
     if (links.length > 0) {
       if (selectionState.isCopyMode) {
-        const { checkDuplicatesOnCopy } = await chrome.storage.sync.get({ checkDuplicatesOnCopy: true });
-        if (checkDuplicatesOnCopy) {
+        if (selectionState.checkDuplicatesOnCopy) {
           links = [...new Set(links)];
         }
         copyLinksToClipboard(links);
