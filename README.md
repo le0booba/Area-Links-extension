@@ -132,7 +132,7 @@ Area_Links/
 </details>
 
 ### Data Handling
-- **🏠 Local Storage:** All settings stored locally via `chrome.storage.sync`
+- **🏠 Local Storage:** All settings containing links, exclusion-words are saved locally via `chrome.storage.sync`
 - **🚫 No Tracking:** Zero analytics, telemetry, or user data collection
 - **🔒 No External Requests:** Extension operates entirely offline
 
