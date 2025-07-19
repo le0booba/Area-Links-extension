@@ -11,8 +11,6 @@
   A powerful Chrome extension to select an area on any webpage and instantly open or copy all links within it.
 
   ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-blue?logo=googlechrome)
-  ![Version](https://img.shields.io/badge/Version-1.6.5-green)
-  ![License](https://img.shields.io/badge/License-MIT-blue)
 </div>
 
 ---
