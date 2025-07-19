@@ -51,7 +51,7 @@
 - 📂 **Flexible Opening** - New tabs, new window, or reverse order
 - 🚫 **Smart Filtering** - Exclude specific domains and keywords
 - ⚙️ **Configurable Limits** - Set maximum tabs to open at once
-- - 🎹 **Custom Shortcuts** - Fully customizable keyboard combinations
+- 🎹 **Custom Shortcuts** - Fully customizable keyboard combinations
 
 <details>
 <summary>User Experience</summary>
