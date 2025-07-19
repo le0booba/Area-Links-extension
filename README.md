@@ -1,7 +1,10 @@
 # Area Links
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/DEMO1.gif" alt="Area Links Demo" width="450"/>
+  <div style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+    <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/screen-options-1.png" alt="Area Links Screenshot 1" width="250"/>
+    <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/screen-options-2.png" alt="Area Links Screenshot 2" width="400"/>
+  </div>
   
   **Select. Open. Done.**
   
@@ -31,6 +34,7 @@
 |--------|------------------|-------|
 | **Open Links** | `Alt+Z` (default) | Hold shortcut → Drag selection box → Release |
 | **Copy Links** | `Alt+X` (default) | Hold shortcut → Drag selection box → Release |
+| **Cancel Selection** | `Esc` | Press while in selection mode |
 
 > **Tip:** Customize shortcuts at `chrome://extensions/shortcuts`
 
@@ -81,6 +85,9 @@ Click the extension icon for instant access to:
 
 ### Advanced Settings (Options Page)
 
+<details>
+<summary>View Advanced Settings</summary>
+
 | Setting | Description | Example |
 |---------|-------------|---------|
 | **Excluded Domains** | Skip links from specific websites | `facebook.com, ads.google.com` |
@@ -89,26 +96,32 @@ Click the extension icon for instant access to:
 | **Selection Style** | Visual appearance of selection box | 4 styles available |
 | **History Management** | Remember opened links to prevent duplicates | ✅ Enabled by default |
 
+</details>
+
 ---
 
 ## 🔒 Privacy & Security
 
 ### Data Handling
 
-**🏠 Local Storage (chrome.storage.local)**
-Data stored only on your device, never synced to your Google account:
+<details>
+<summary><strong>🏠 Local Storage (chrome.storage.local)</strong> - Data stored only on your device, never synced to your Google account</summary>
+
 - **Link History** - URLs you've previously opened (up to 15 links)
 - **History Preferences** - Whether to remember opened links (`useHistory`)
 - **Copy Settings** - Remove duplicates when copying links (`checkDuplicatesOnCopy`)
+</details>
 
-**☁️ Chrome Sync Storage (chrome.storage.sync)**
-Settings synced to your Chrome account across devices:
+<details>
+<summary><strong>☁️ Chrome Sync Storage (chrome.storage.sync)</strong> - Settings synced to your Chrome account across devices</summary>
+
 - **Excluded Domains** - Websites to skip (`excludedDomains`)
 - **Excluded Words** - Keywords to filter out (`excludedWords`)
 - **Tab Limits** - Maximum tabs to open (`tabLimit`)
 - **Visual Settings** - Selection box style (`selectionStyle`)
 - **Opening Behavior** - New window preference (`openInNewWindow`)
 - **Order Settings** - Reverse link order (`reverseOrder`)
+</details>
 
 **🔐 Security Guarantees**
 - **🚫 Zero Tracking** - No analytics, telemetry, or user data collection
