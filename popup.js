@@ -6,10 +6,10 @@ const QUICK_SETTINGS_CONFIG = [
 ];
 
 function showStatus() {
-  const statusEl = document.getElementById('status263'); 
+  const statusEl = document.getElementById('status-message');
   statusEl.textContent = 'Saved!';
-  setTimeout(() => { 
-    statusEl.textContent = ''; 
+  setTimeout(() => {
+    statusEl.textContent = '';
   }, 1200);
 }
 
@@ -27,12 +27,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const el = document.getElementById(config.id);
     if (el) {
       el.checked = items[config.key] !== undefined ? items[config.key] : config.default;
-    }
-  });
-
-  QUICK_SETTINGS_CONFIG.forEach(config => {
-    const el = document.getElementById(config.id);
-    if (el) {
       el.addEventListener('change', (e) => {
         const storageArea = config.storage === 'local' ? chrome.storage.local : chrome.storage.sync;
         storageArea.set({ [config.key]: e.target.checked }).then(showStatus);
@@ -42,6 +36,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('open-options').addEventListener('click', () => {
     chrome.runtime.openOptionsPage();
-    window.close(); 
+    window.close();
   });
 });

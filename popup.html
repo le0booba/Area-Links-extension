@@ -11,7 +11,7 @@
       margin: 0;
       padding: 6px 16px 10px 16px;
     }
-    h2 {
+    h3 {
       font-size: 1.2em;
       margin: 0 0 10px 0;
       color: #007bff;
@@ -34,17 +34,14 @@
       width: 18px;
       height: 18px;
     }
-    #status {
-      color: green;
-      font-size: 1.4em;
-      margin-top: 8px;
-      margin-bottom: 8px;
-      height: 1.3em;
-      text-align: center;
-      line-height: 1.3em;
-      font-family: monospace;
-      font-weight: 800;
-      letter-spacing: 1px;
+    hr {
+      border: 0;
+      height: 1px;
+      background-color: #9a9d95;
+      margin: 10px 0;
+    }
+    .button-container {
+      margin-top: 18px;
     }
     #open-options {
       width: 100%;
@@ -67,7 +64,7 @@
       width: 100%;
       margin-bottom: 5px;
     }
-    #status263 {
+    #status-message {
       color: green;
       font-size: 1.4em;
       margin-top: 8px;
@@ -84,7 +81,7 @@
 <body>
   <div class="header-container">
     <h3>Quick Settings</h3>
-    <div id="status263"></div>
+    <div id="status-message"></div>
   </div>
   <div>
     <label><input type="checkbox" id="popup-openInNewWindow"> Open in new window</label>
@@ -92,14 +89,14 @@
   <div>
     <label><input type="checkbox" id="popup-reverseOrder"> Open in reverse order</label>
   </div>
-  <hr style="border:0; height:1px; background-color:#9a9d95; margin: 10px 0 10px 0;">
+  <hr>
   <div>
     <label><input type="checkbox" id="popup-useHistory"> Remember opened links to avoid duplicates</label>
   </div>
   <div>
     <label><input type="checkbox" id="popup-checkDuplicatesOnCopy"> Remove duplicates when copying links</label>
   </div>
-  <div style="margin-top: 18px;">
+  <div class="button-container">
     <button id="open-options">Open Full Settings</button>
   </div>
   <script src="popup.js"></script>

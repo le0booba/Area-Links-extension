@@ -12,9 +12,10 @@ const DEFAULT_SETTINGS = {
   reverseOrder: false
 };
 
-function showStatus(message, duration = 2500) {
+function showStatus(message, duration = 2500, isError = false) {
   const status = document.getElementById('status');
   status.textContent = message;
+  status.style.color = isError ? '#dc3545' : 'green';
   setTimeout(() => {
     status.textContent = '';
   }, duration);
@@ -26,10 +27,18 @@ function updateClearButtonsState() {
 }
 
 function saveOptions() {
+  const tabLimitInput = document.getElementById('tabLimit');
+  const tabLimitValue = parseInt(tabLimitInput.value, 10);
+
+  if (isNaN(tabLimitValue) || tabLimitValue < 1 || tabLimitValue > 50) {
+    showStatus('Error: Tab limit must be between 1 and 50.', 3500, true);
+    return;
+  }
+
   const settingsToSave = {
     excludedDomains: document.getElementById('excludedDomains').value.trim(),
     excludedWords: document.getElementById('excludedWords').value.trim(),
-    tabLimit: parseInt(document.getElementById('tabLimit').value, 10) || DEFAULT_SETTINGS.tabLimit,
+    tabLimit: tabLimitValue,
     useHistory: document.getElementById('useHistory').checked,
     checkDuplicatesOnCopy: document.getElementById('checkDuplicatesOnCopy').checked,
     selectionStyle: document.getElementById('selectionStyle').value,
@@ -42,7 +51,7 @@ function saveOptions() {
 
   SYNC_SETTINGS_KEYS.forEach(key => syncSettings[key] = settingsToSave[key]);
   LOCAL_SETTINGS_KEYS.forEach(key => localSettings[key] = settingsToSave[key]);
-  
+
   Promise.all([
     chrome.storage.sync.set(syncSettings),
     chrome.storage.local.set(localSettings)
@@ -66,7 +75,7 @@ async function restoreOptions() {
       chrome.storage.sync.get(syncDefaults),
       chrome.storage.local.get(localDefaults)
   ]);
-  
+
   const items = { ...syncItems, ...localItems };
 
   document.getElementById('excludedDomains').value = items.excludedDomains;
@@ -77,7 +86,7 @@ async function restoreOptions() {
   document.getElementById('selectionStyle').value = items.selectionStyle;
   document.getElementById('openInNewWindow').checked = items.openInNewWindow;
   document.getElementById('reverseOrder').checked = items.reverseOrder;
-  
+
   updateClearButtonsState();
 }
 
@@ -89,7 +98,7 @@ function clearHistory() {
 
 document.addEventListener('DOMContentLoaded', () => {
   restoreOptions();
-  
+
   document.getElementById('save').addEventListener('click', saveOptions);
   document.getElementById('clearHistory').addEventListener('click', clearHistory);
   document.getElementById('shortcutsLink').addEventListener('click', () => {
@@ -98,22 +107,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const domainsTextarea = document.getElementById('excludedDomains');
   const wordsTextarea = document.getElementById('excludedWords');
-  
+
   domainsTextarea.addEventListener('input', updateClearButtonsState);
   wordsTextarea.addEventListener('input', updateClearButtonsState);
-  
+
   document.getElementById('clearExcludedDomains').addEventListener('click', () => {
     domainsTextarea.value = '';
     updateClearButtonsState();
   });
-  
+
   document.getElementById('clearExcludedWords').addEventListener('click', () => {
     wordsTextarea.value = '';
     updateClearButtonsState();
   });
-  
+
   const versionElem = document.getElementById('ext-version');
   if (versionElem) {
       versionElem.textContent = 'v' + chrome.runtime.getManifest().version;
   }
+
+  document.getElementById('copyright-year').textContent = new Date().getFullYear();
 });
