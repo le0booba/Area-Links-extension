@@ -53,10 +53,14 @@
 - ⚙️ **Configurable Limits** - Set maximum tabs to open at once
 - - 🎹 **Custom Shortcuts** - Fully customizable keyboard combinations
 
-### User Experience
+<details>
+<summary>User Experience</summary>
+
 - 📱 **Quick Settings Popup** - Fast access to common toggles
 - 💾 **Settings Sync** - Preferences saved across browser instances
 - 🎯 **Visual Link Highlighting** - Links within the selected area are visually highlighted in both open and copy modes, providing clear feedback on which links will be processed. When the "Remember opened links to avoid duplicates" or "Remove duplicates when copying links" option is enabled, duplicate links are not highlighted, ensuring users can easily identify unique links being targeted.
+
+</details>
 
 ---
 
