@@ -2,7 +2,7 @@
 
 <div align="center">
   <div style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
-    <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/screen-options-1.png" alt="Area Links Screenshot 1" width="250"/>
+    <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/screen-options-1.png" alt="Area Links Screenshot 1" width="300"/>
     <img src="https://raw.githubusercontent.com/le0booba/Area_Links/refs/heads/main/screen-options-2.png" alt="Area Links Screenshot 2" width="400"/>
   </div>
   
@@ -21,7 +21,7 @@
 
 ### Installation
 
-1. **Download** the [latest release](https://github.com/le0booba/Area_Links/releases/latest) from GitHub
+1. **Download** the [LATEST RELEASE](https://github.com/le0booba/Area_Links/releases/latest) from GitHub
 2. **Extract** the ZIP file to a folder on your computer
 3. **Open Chrome** and navigate to `chrome://extensions/`
 4. **Enable** "Developer mode" (toggle in top-right corner)
@@ -53,12 +53,12 @@
 - 📂 **Flexible Opening** - New tabs, new window, or reverse order
 - 🚫 **Smart Filtering** - Exclude specific domains and keywords
 - ⚙️ **Configurable Limits** - Set maximum tabs to open at once
+- - 🎹 **Custom Shortcuts** - Fully customizable keyboard combinations
 
 ### User Experience
 - 📱 **Quick Settings Popup** - Fast access to common toggles
-- 🔧 **Comprehensive Options** - Full configuration page
-- 🎹 **Custom Shortcuts** - Fully customizable keyboard combinations
 - 💾 **Settings Sync** - Preferences saved across browser instances
+- 🎯 **Visual Link Highlighting** - Links within the selected area are visually highlighted in both open and copy modes, providing clear feedback on which links will be processed. When the "Remember opened links to avoid duplicates" or "Remove duplicates when copying links" option is enabled, duplicate links are not highlighted, ensuring users can easily identify unique links being targeted.
 
 ---
 
@@ -78,10 +78,10 @@ Perfect for:
 
 ### Quick Settings (Extension Popup)
 Click the extension icon for instant access to:
-- ✅ Open in new window
-- ✅ Open in reverse order  
-- ✅ Remember opened links to avoid duplicates
-- ✅ Remove duplicates when copying links
+- 🔼 Open in new window
+- 🔼 Open in reverse order  
+- 🔼 Remember opened links to avoid duplicates
+- 🔼 Remove duplicates when copying links
 
 ### Advanced Settings (Options Page)
 
@@ -101,6 +101,12 @@ Click the extension icon for instant access to:
 ---
 
 ## 🔒 Privacy & Security
+
+**🔐 Security Guarantees**
+- **🚫 Zero Tracking** - No analytics, telemetry, or user data collection
+- **🔒 Offline Operation** - No external network requests or data transmission
+- **🛡️ Local Processing** - All link detection and filtering happens on your device
+- **🗑️ Easy Cleanup** - Clear history anytime via extension options
 
 ### Data Handling
 
@@ -122,12 +128,6 @@ Click the extension icon for instant access to:
 - **Opening Behavior** - New window preference (`openInNewWindow`)
 - **Order Settings** - Reverse link order (`reverseOrder`)
 </details>
-
-**🔐 Security Guarantees**
-- **🚫 Zero Tracking** - No analytics, telemetry, or user data collection
-- **🔒 Offline Operation** - No external network requests or data transmission
-- **🛡️ Local Processing** - All link detection and filtering happens on your device
-- **🗑️ Easy Cleanup** - Clear history anytime via extension options
 
 ### Required Permissions
 
