@@ -16,6 +16,7 @@ const selectionState = {
 };
 
 let highlightedElements = new Set();
+let linkDataCache = [];
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type !== "initiateSelection" && request.type !== "initiateSelectionCopy") {
@@ -64,6 +65,8 @@ function resetSelection() {
   document.removeEventListener('keydown', handleKeyDown, true);
   document.removeEventListener('scroll', handleScroll, true);
 
+  linkDataCache = [];
+
   Object.assign(selectionState, {
     isActive: false,
     isSelecting: false,
@@ -91,6 +94,27 @@ function handleMouseDown(e) {
   e.preventDefault();
   e.stopPropagation();
 
+  linkDataCache = Array.from(document.querySelectorAll('a[href]')).map(link => {
+    const href = link.href;
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+      return null;
+    }
+    const rect = link.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      return null;
+    }
+    return {
+      element: link,
+      href: href,
+      docRect: {
+        top: rect.top + window.scrollY,
+        left: rect.left + window.scrollX,
+        right: rect.left + window.scrollX + rect.width,
+        bottom: rect.top + window.scrollY + rect.height,
+      }
+    };
+  }).filter(Boolean);
+
   selectionState.isSelecting = true;
   selectionState.startCoords = { x: e.pageX, y: e.pageY };
   selectionState.currentCoords = { x: e.pageX, y: e.pageY };
@@ -107,6 +131,18 @@ function handleMouseDown(e) {
   document.addEventListener('scroll', handleScroll, true);
 }
 
+function getIntersectingLinkData(docRect) {
+  return linkDataCache.filter(linkData => {
+    const linkDocRect = linkData.docRect;
+    return (
+      linkDocRect.left < docRect.right &&
+      linkDocRect.right > docRect.left &&
+      linkDocRect.top < docRect.bottom &&
+      linkDocRect.bottom > docRect.top
+    );
+  });
+}
+
 function handleScroll() {
   if (!selectionState.isSelecting) return;
   updateSelectionBox();
@@ -115,43 +151,30 @@ function handleScroll() {
 }
 
 function updateLinkHighlights(docRect) {
+  const intersectingData = getIntersectingLinkData(docRect);
   const newHighlightedElements = new Set();
   const historySet = new Set(selectionState.linkHistory);
   const seenInSelection = new Set();
 
-  document.querySelectorAll('a[href]').forEach(link => {
-    const r = link.getBoundingClientRect();
-    const href = link.href;
-
-    if (!href || href.startsWith('#') || href.startsWith('javascript:') || r.width === 0 || r.height === 0) {
-      return;
-    }
-
-    const linkDocTop = r.top + window.scrollY;
-    const linkDocLeft = r.left + window.scrollX;
-
-    const isInSelection =
-      linkDocLeft < docRect.right &&
-      linkDocLeft + r.width > docRect.left &&
-      linkDocTop < docRect.bottom &&
-      linkDocTop + r.height > docRect.top;
-
-    if (!isInSelection) return;
+  intersectingData.forEach(linkData => {
+    const { element, href } = linkData;
+    let shouldHighlight = true;
 
     if (!selectionState.isCopyMode) {
       if (seenInSelection.has(href) || (selectionState.useHistory && historySet.has(href))) {
-        return;
+        shouldHighlight = false;
       }
     } else {
       if (selectionState.checkDuplicatesOnCopy && seenInSelection.has(href)) {
-        return;
+        shouldHighlight = false;
       }
     }
 
-    newHighlightedElements.add(link);
-
-    if (!selectionState.isCopyMode || selectionState.checkDuplicatesOnCopy) {
-      seenInSelection.add(href);
+    if (shouldHighlight) {
+      newHighlightedElements.add(element);
+      if (!selectionState.isCopyMode || selectionState.checkDuplicatesOnCopy) {
+        seenInSelection.add(href);
+      }
     }
   });
 
@@ -184,11 +207,11 @@ function handleMouseUp(e) {
   e.preventDefault();
   e.stopPropagation();
 
-  selectionState.currentCoords = { x: e.pageX, y: e.pageY };
   const selectionRect = getSelectionRectangle(selectionState.startCoords, selectionState.currentCoords);
 
   if (selectionRect.width > 5 && selectionRect.height > 5) {
-    let links = getLinksInArea(selectionRect);
+    const intersectingData = getIntersectingLinkData(selectionRect);
+    let links = intersectingData.map(data => data.href);
 
     if (links.length > 0) {
       if (selectionState.isCopyMode) {
@@ -224,27 +247,6 @@ function getSelectionRectangle(start, end) {
   return { x, y, width, height, left: x, top: y, right: x + width, bottom: y + height };
 }
 
-function getLinksInArea(docRect) {
-  return Array.from(document.querySelectorAll('a[href]'))
-    .filter(link => {
-      const href = link.getAttribute('href');
-      if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
-        return false;
-      }
-      const r = link.getBoundingClientRect();
-      if (r.width === 0 || r.height === 0) return false;
-
-      const linkDocTop = r.top + window.scrollY;
-      const linkDocLeft = r.left + window.scrollX;
-
-      return linkDocLeft < docRect.right &&
-             linkDocLeft + r.width > docRect.left &&
-             linkDocTop < docRect.bottom &&
-             linkDocTop + r.height > docRect.top;
-    })
-    .map(link => link.href);
-}
-
 function copyLinksToClipboard(links) {
   const text = links.join('\n');
 
@@ -261,8 +263,7 @@ function copyLinksToClipboard(links) {
     textarea.select();
     try {
       document.execCommand('copy');
-    } catch (err)
- {
+    } catch (err) {
       console.error('Area Links: Fallback copy method failed.', err);
     }
     document.body.removeChild(textarea);

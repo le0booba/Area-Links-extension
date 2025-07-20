@@ -81,9 +81,10 @@ async function processLinks(urls) {
       return false;
     }
     try {
+      const lowerCaseUrl = url.toLowerCase();
       const urlHostname = new URL(url).hostname.toLowerCase();
       if (excludedDomains.some(domain => urlHostname.includes(domain))) return false;
-      if (excludedWords.some(word => url.toLowerCase().includes(word))) return false;
+      if (excludedWords.some(word => lowerCaseUrl.includes(word))) return false;
     } catch {
       return false;
     }
