@@ -15,7 +15,7 @@ const DEFAULT_SETTINGS = {
 function showStatus(message, duration = 2500, isError = false) {
   const status = document.getElementById('status');
   status.textContent = message;
-  status.style.color = isError ? '#dc3545' : 'green';
+  status.style.color = isError ? '#dc3545' : '#105a9b;';
   setTimeout(() => {
     status.textContent = '';
   }, duration);

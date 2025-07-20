@@ -115,7 +115,7 @@ Click the extension icon for instant access to:
 <details>
 <summary><strong>🏠 Local Storage (chrome.storage.local)</strong> - Data stored only on your device, never synced to your Google account</summary>
 
-- **Link History** - URLs you've previously opened (up to 15 links)
+- **Link History** - URLs you've previously opened (up to 75 links)
 - **History Preferences** - Whether to remember opened links (`useHistory`)
 - **Copy Settings** - Remove duplicates when copying links (`checkDuplicatesOnCopy`)
 </details>

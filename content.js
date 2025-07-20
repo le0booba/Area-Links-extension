@@ -9,6 +9,7 @@ const selectionState = {
   selectionBox: null,
   style: 'classic-blue',
   startCoords: { x: 0, y: 0 },
+  currentCoords: { x: 0, y: 0 },
   checkDuplicatesOnCopy: true,
   useHistory: false,
   linkHistory: [],
@@ -61,6 +62,7 @@ function resetSelection() {
   document.removeEventListener('mousemove', handleMouseMove, true);
   document.removeEventListener('mouseup', handleMouseUp, true);
   document.removeEventListener('keydown', handleKeyDown, true);
+  document.removeEventListener('scroll', handleScroll, true);
 
   Object.assign(selectionState, {
     isActive: false,
@@ -68,6 +70,7 @@ function resetSelection() {
     isCopyMode: false,
     selectionBox: null,
     startCoords: { x: 0, y: 0 },
+    currentCoords: { x: 0, y: 0 },
     checkDuplicatesOnCopy: true,
     useHistory: false,
     linkHistory: [],
@@ -89,41 +92,51 @@ function handleMouseDown(e) {
   e.stopPropagation();
 
   selectionState.isSelecting = true;
-  selectionState.startCoords = { x: e.clientX, y: e.clientY };
+  selectionState.startCoords = { x: e.pageX, y: e.pageY };
+  selectionState.currentCoords = { x: e.pageX, y: e.pageY };
 
   selectionState.selectionBox = document.createElement('div');
   selectionState.selectionBox.id = 'link-opener-selection-box';
   selectionState.selectionBox.className = selectionState.style;
   document.body.appendChild(selectionState.selectionBox);
 
-  updateSelectionBox(e.clientX, e.clientY);
+  updateSelectionBox();
 
   document.addEventListener('mousemove', handleMouseMove, true);
   document.addEventListener('mouseup', handleMouseUp, true);
+  document.addEventListener('scroll', handleScroll, true);
 }
 
-function updateLinkHighlights(clientRect) {
-  const selectionRect = {
-    left: clientRect.x,
-    top: clientRect.y,
-    right: clientRect.x + clientRect.width,
-    bottom: clientRect.y + clientRect.height,
-  };
+function handleScroll() {
+  if (!selectionState.isSelecting) return;
+  updateSelectionBox();
+  const rect = getSelectionRectangle(selectionState.startCoords, selectionState.currentCoords);
+  updateLinkHighlights(rect);
+}
 
+function updateLinkHighlights(docRect) {
   const newHighlightedElements = new Set();
   const historySet = new Set(selectionState.linkHistory);
   const seenInSelection = new Set();
 
   document.querySelectorAll('a[href]').forEach(link => {
     const r = link.getBoundingClientRect();
-    const isInSelection = r.width > 0 && r.height > 0 &&
-      r.left < selectionRect.right && r.right > selectionRect.left &&
-      r.top < selectionRect.bottom && r.bottom > selectionRect.top;
+    const href = link.href;
+
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') || r.width === 0 || r.height === 0) {
+      return;
+    }
+
+    const linkDocTop = r.top + window.scrollY;
+    const linkDocLeft = r.left + window.scrollX;
+
+    const isInSelection =
+      linkDocLeft < docRect.right &&
+      linkDocLeft + r.width > docRect.left &&
+      linkDocTop < docRect.bottom &&
+      linkDocTop + r.height > docRect.top;
 
     if (!isInSelection) return;
-
-    const href = link.href;
-    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
 
     if (!selectionState.isCopyMode) {
       if (seenInSelection.has(href) || (selectionState.useHistory && historySet.has(href))) {
@@ -159,9 +172,9 @@ function updateLinkHighlights(clientRect) {
 
 function handleMouseMove(e) {
   if (!selectionState.isSelecting) return;
-  const currentCoords = { x: e.clientX, y: e.clientY };
-  updateSelectionBox(currentCoords.x, currentCoords.y);
-  const rect = getSelectionRectangle(selectionState.startCoords, currentCoords);
+  selectionState.currentCoords = { x: e.pageX, y: e.pageY };
+  updateSelectionBox();
+  const rect = getSelectionRectangle(selectionState.startCoords, selectionState.currentCoords);
   updateLinkHighlights(rect);
 }
 
@@ -171,8 +184,8 @@ function handleMouseUp(e) {
   e.preventDefault();
   e.stopPropagation();
 
-  const endCoords = { x: e.clientX, y: e.clientY };
-  const selectionRect = getSelectionRectangle(selectionState.startCoords, endCoords);
+  selectionState.currentCoords = { x: e.pageX, y: e.pageY };
+  const selectionRect = getSelectionRectangle(selectionState.startCoords, selectionState.currentCoords);
 
   if (selectionRect.width > 5 && selectionRect.height > 5) {
     let links = getLinksInArea(selectionRect);
@@ -191,13 +204,13 @@ function handleMouseUp(e) {
   resetSelection();
 }
 
-function updateSelectionBox(currentX, currentY) {
+function updateSelectionBox() {
   if (!selectionState.selectionBox) return;
-  const rect = getSelectionRectangle(selectionState.startCoords, { x: currentX, y: currentY });
+  const rect = getSelectionRectangle(selectionState.startCoords, selectionState.currentCoords);
 
   Object.assign(selectionState.selectionBox.style, {
-    left: `${rect.x}px`,
-    top: `${rect.y}px`,
+    left: `${rect.x - window.scrollX}px`,
+    top: `${rect.y - window.scrollY}px`,
     width: `${rect.width}px`,
     height: `${rect.height}px`
   });
@@ -208,17 +221,10 @@ function getSelectionRectangle(start, end) {
   const y = Math.min(start.y, end.y);
   const width = Math.abs(start.x - end.x);
   const height = Math.abs(start.y - end.y);
-  return { x, y, width, height };
+  return { x, y, width, height, left: x, top: y, right: x + width, bottom: y + height };
 }
 
-function getLinksInArea(clientRect) {
-  const selectionRect = {
-    left: clientRect.x,
-    top: clientRect.y,
-    right: clientRect.x + clientRect.width,
-    bottom: clientRect.y + clientRect.height
-  };
-
+function getLinksInArea(docRect) {
   return Array.from(document.querySelectorAll('a[href]'))
     .filter(link => {
       const href = link.getAttribute('href');
@@ -226,9 +232,15 @@ function getLinksInArea(clientRect) {
         return false;
       }
       const r = link.getBoundingClientRect();
-      return r.width > 0 && r.height > 0 &&
-             r.left < selectionRect.right && r.right > selectionRect.left &&
-             r.top < selectionRect.bottom && r.bottom > selectionRect.top;
+      if (r.width === 0 || r.height === 0) return false;
+
+      const linkDocTop = r.top + window.scrollY;
+      const linkDocLeft = r.left + window.scrollX;
+
+      return linkDocLeft < docRect.right &&
+             linkDocLeft + r.width > docRect.left &&
+             linkDocTop < docRect.bottom &&
+             linkDocTop + r.height > docRect.top;
     })
     .map(link => link.href);
 }
@@ -249,7 +261,8 @@ function copyLinksToClipboard(links) {
     textarea.select();
     try {
       document.execCommand('copy');
-    } catch (err) {
+    } catch (err)
+ {
       console.error('Area Links: Fallback copy method failed.', err);
     }
     document.body.removeChild(textarea);
