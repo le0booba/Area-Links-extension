@@ -1,4 +1,4 @@
-const HISTORY_LIMIT = 15;
+const HISTORY_LIMIT = 50;
 const SYNC_DEFAULTS = {
   excludedDomains: '',
   excludedWords: '',
