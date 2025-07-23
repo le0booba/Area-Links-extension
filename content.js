@@ -24,13 +24,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   const isCopyMode = request.type === "initiateSelectionCopy";
-  const cursorStyle = isCopyMode ? customCopyCursor : 'crosshair';
-
+  selectionState.isCopyMode = isCopyMode;
   selectionState.checkDuplicatesOnCopy = request.checkDuplicatesOnCopy;
   selectionState.useHistory = request.useHistory;
   selectionState.linkHistory = request.linkHistory || [];
-  selectionState.isCopyMode = isCopyMode;
-  document.body.style.cursor = cursorStyle;
+
+  document.body.style.cursor = isCopyMode ? customCopyCursor : 'crosshair';
 
   if (selectionState.isActive) {
     sendResponse({ success: true, message: "Mode switched" });
@@ -74,9 +73,6 @@ function resetSelection() {
     selectionBox: null,
     startCoords: { x: 0, y: 0 },
     currentCoords: { x: 0, y: 0 },
-    checkDuplicatesOnCopy: true,
-    useHistory: false,
-    linkHistory: [],
   });
 }
 
@@ -95,14 +91,10 @@ function handleMouseDown(e) {
   e.stopPropagation();
 
   linkDataCache = Array.from(document.querySelectorAll('a[href]')).map(link => {
-    const href = link.href;
-    if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
-      return null;
-    }
+    const { href } = link;
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return null;
     const rect = link.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) {
-      return null;
-    }
+    if (rect.width === 0 || rect.height === 0) return null;
     return {
       element: link,
       href: href,
@@ -132,15 +124,12 @@ function handleMouseDown(e) {
 }
 
 function getIntersectingLinkData(docRect) {
-  return linkDataCache.filter(linkData => {
-    const linkDocRect = linkData.docRect;
-    return (
-      linkDocRect.left < docRect.right &&
-      linkDocRect.right > docRect.left &&
-      linkDocRect.top < docRect.bottom &&
-      linkDocRect.bottom > docRect.top
-    );
-  });
+  return linkDataCache.filter(linkData =>
+    linkData.docRect.left < docRect.right &&
+    linkData.docRect.right > docRect.left &&
+    linkData.docRect.top < docRect.bottom &&
+    linkData.docRect.bottom > docRect.top
+  );
 }
 
 function handleScroll() {
@@ -156,21 +145,21 @@ function updateLinkHighlights(docRect) {
   const historySet = new Set(selectionState.linkHistory);
   const seenInSelection = new Set();
 
-  intersectingData.forEach(linkData => {
-    const { element, href } = linkData;
-    let shouldHighlight = true;
+  intersectingData.forEach(({ element, href }) => {
+    const isSeenInSelection = seenInSelection.has(href);
+    let isFiltered = false;
 
-    if (!selectionState.isCopyMode) {
-      if (seenInSelection.has(href) || (selectionState.useHistory && historySet.has(href))) {
-        shouldHighlight = false;
+    if (selectionState.isCopyMode) {
+      if (selectionState.checkDuplicatesOnCopy && isSeenInSelection) {
+        isFiltered = true;
       }
     } else {
-      if (selectionState.checkDuplicatesOnCopy && seenInSelection.has(href)) {
-        shouldHighlight = false;
+      if (isSeenInSelection || (selectionState.useHistory && historySet.has(href))) {
+        isFiltered = true;
       }
     }
 
-    if (shouldHighlight) {
+    if (!isFiltered) {
       newHighlightedElements.add(element);
       if (!selectionState.isCopyMode || selectionState.checkDuplicatesOnCopy) {
         seenInSelection.add(href);
@@ -183,7 +172,6 @@ function updateLinkHighlights(docRect) {
       el.classList.remove(HIGHLIGHT_CLASS);
     }
   });
-
   newHighlightedElements.forEach(el => {
     if (!highlightedElements.has(el)) {
       el.classList.add(HIGHLIGHT_CLASS);
@@ -210,9 +198,7 @@ function handleMouseUp(e) {
   const selectionRect = getSelectionRectangle(selectionState.startCoords, selectionState.currentCoords);
 
   if (selectionRect.width > 5 && selectionRect.height > 5) {
-    const intersectingData = getIntersectingLinkData(selectionRect);
-    let links = intersectingData.map(data => data.href);
-
+    let links = Array.from(highlightedElements, el => el.href);
     if (links.length > 0) {
       if (selectionState.isCopyMode) {
         if (selectionState.checkDuplicatesOnCopy) {
@@ -249,12 +235,7 @@ function getSelectionRectangle(start, end) {
 
 function copyLinksToClipboard(links) {
   const text = links.join('\n');
-
-  if (navigator.clipboard && window.isSecureContext) {
-    navigator.clipboard.writeText(text).catch(err => {
-      console.error('Area Links: Could not copy text.', err);
-    });
-  } else {
+  if (!navigator.clipboard || !window.isSecureContext) {
     const textarea = document.createElement('textarea');
     textarea.value = text;
     textarea.style.position = 'fixed';
@@ -267,5 +248,9 @@ function copyLinksToClipboard(links) {
       console.error('Area Links: Fallback copy method failed.', err);
     }
     document.body.removeChild(textarea);
+    return;
   }
+  navigator.clipboard.writeText(text).catch(err => {
+    console.error('Area Links: Could not copy text.', err);
+  });
 }

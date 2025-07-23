@@ -7,6 +7,7 @@ const QUICK_SETTINGS_CONFIG = [
 
 function showStatus() {
   const statusEl = document.getElementById('status-message');
+  if (!statusEl) return;
   statusEl.textContent = 'Saved!';
   setTimeout(() => {
     statusEl.textContent = '';
@@ -21,12 +22,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     syncKeys.length > 0 ? chrome.storage.sync.get(syncKeys) : Promise.resolve({}),
     localKeys.length > 0 ? chrome.storage.local.get(localKeys) : Promise.resolve({})
   ]);
+
   const items = { ...syncItems, ...localItems };
 
   QUICK_SETTINGS_CONFIG.forEach(config => {
     const el = document.getElementById(config.id);
     if (el) {
-      el.checked = items[config.key] !== undefined ? items[config.key] : config.default;
+      el.checked = items[config.key] ?? config.default;
       el.addEventListener('change', (e) => {
         const storageArea = config.storage === 'local' ? chrome.storage.local : chrome.storage.sync;
         storageArea.set({ [config.key]: e.target.checked }).then(showStatus);

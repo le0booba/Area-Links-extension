@@ -5,15 +5,16 @@
   <title>Area Links Popup</title>
   <style>
     body {
-      min-width: 240px;
+      min-width: 220px;
       font-family: system-ui, Arial, sans-serif;
       background: #e9ecef;
       margin: 0;
-      padding: 6px 12px 6px 12px;
+      padding: 5px 10px;
+      padding-bottom: 12px; /* Добавлено место для кнопки внизу */
     }
     h3 {
-      font-size: 1.2em;
-      margin: 1px 0 1px 0;
+      font-size: 1.1em;
+      margin: 2px 0;
       color: #007bff;
       font-weight: 700;
       letter-spacing: 0.5px;
@@ -21,42 +22,44 @@
     label {
       display: flex;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-family: system-ui, Georgia, sans-serif;
       font-weight: 600;
-      font-size: 1.1em;
+      font-size: 1em;
       color: #333;
       cursor: pointer;
-      gap: 8px;
+      gap: 6px;
     }
     input[type="checkbox"] {
       accent-color: #007bff;
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
     }
     hr {
       border: 0;
       height: 1px;
       background-color: #d1d5db;
-      margin: 5px 0 5px 0;
+      margin: 4px 0;
     }
-    .button-container {
-      margin-top: 8px;
-      text-align: center;
-    }
+    /* Старый контейнер для кнопки удален */
+
+    /* Новая стилизация кнопки-шестеренки */
     #open-options {
-      margin-top: 6px;
+      position: absolute;
+      bottom: 6px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
       background: #333333;
-      color: #fff;
+      color: #fff; /* Цвет для иконки */
       border: none;
-      padding: 6px 16px 6px 16px;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 0.95em;
-      font-family: Verdana, Geneva, Tahoma, sans-serif;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
       transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     #open-options:hover {
       background: #292929;
@@ -67,16 +70,14 @@
       align-items: center;
       width: 100%;
       margin-bottom: 5px;
-      margin-left: 1px;
     }
     #status-message {
       color: #105a9b;
-      font-size: 1.4em;
-      margin-top: 6px;
-      margin-bottom: 1px;
-      height: 1.3em;
+      font-size: 1.2em;
+      margin-top: 2px;
+      height: 1.2em;
       text-align: center;
-      line-height: 1.3em;
+      line-height: 1.2em;
       font-family: monospace;
       font-weight: 800;
       letter-spacing: 1px;
@@ -96,14 +97,19 @@
   </div>
   <hr>
   <div>
-    <label><input type="checkbox" id="popup-useHistory"> Remember opened links to avoid duplicates</label>
+    <label><input type="checkbox" id="popup-useHistory"> Remember opened links</label>
   </div>
   <div>
-    <label><input type="checkbox" id="popup-checkDuplicatesOnCopy"> Remove duplicates when copying links</label>
+    <label><input type="checkbox" id="popup-checkDuplicatesOnCopy"> Remove duplicates on copy</label>
   </div>
-  <div class="button-container">
-    <button id="open-options">Open Full Settings</button>
-  </div>
+  
+  <!-- Кнопка теперь находится здесь, без контейнера -->
+  <button id="open-options" title="Open Full Settings">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.23 C14.38,2,14.17,1.84,13.92,1.84H9.92c-0.25,0-0.46,0.16-0.49,0.39l-0.38,2.55c-0.58,0.23-1.12,0.55-1.62,0.93L5.04,4.75 c-0.22-0.08-0.47,0-0.59,0.22L2.54,8.29C2.42,8.49,2.47,8.75,2.66,8.89l2.03,1.58C4.64,10.79,4.6,11.1,4.6,11.41 c0,0.32,0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96 c0.5,0.38,1.03,0.7,1.62,0.94l0.38,2.55c0.02,0.24,0.24,0.4,0.49,0.4h3.99c0.25,0,0.47-0.16,0.49-0.39l0.38-2.55 c0.58-0.23,1.12-0.55,1.62-0.93l2.39,0.96c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M11.94,15.41c-1.93,0-3.5-1.57-3.5-3.5s1.57-3.5,3.5-3.5s3.5,1.57,3.5,3.5S13.87,15.41,11.94,15.41z"/>
+    </svg>
+  </button>
+  
   <script src="popup.js"></script>
 </body>
 </html>

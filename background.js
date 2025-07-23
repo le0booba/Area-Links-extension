@@ -13,6 +13,14 @@ const LOCAL_DEFAULTS = {
   checkDuplicatesOnCopy: true,
 };
 
+async function getSettings() {
+  const [syncSettings, localSettings] = await Promise.all([
+    chrome.storage.sync.get(SYNC_DEFAULTS),
+    chrome.storage.local.get(LOCAL_DEFAULTS)
+  ]);
+  return { ...syncSettings, ...localSettings };
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.storage.sync.set(SYNC_DEFAULTS);
   chrome.storage.local.set(LOCAL_DEFAULTS);
@@ -27,46 +35,35 @@ chrome.commands.onCommand.addListener(async (command, tab) => {
     return;
   }
 
-  const [syncSettings, localSettings] = await Promise.all([
-    chrome.storage.sync.get({ selectionStyle: SYNC_DEFAULTS.selectionStyle }),
-    chrome.storage.local.get({
-      checkDuplicatesOnCopy: LOCAL_DEFAULTS.checkDuplicatesOnCopy,
-      useHistory: LOCAL_DEFAULTS.useHistory,
-      linkHistory: LOCAL_DEFAULTS.linkHistory
-    })
-  ]);
+  const settings = await getSettings();
 
   chrome.tabs.sendMessage(tab.id, {
     type: command === "activate-selection" ? "initiateSelection" : "initiateSelectionCopy",
-    style: syncSettings.selectionStyle,
-    checkDuplicatesOnCopy: localSettings.checkDuplicatesOnCopy,
-    useHistory: localSettings.useHistory,
-    linkHistory: localSettings.useHistory ? localSettings.linkHistory : []
+    style: settings.selectionStyle,
+    checkDuplicatesOnCopy: settings.checkDuplicatesOnCopy,
+    useHistory: settings.useHistory,
+    linkHistory: settings.useHistory ? settings.linkHistory : []
   }).catch(error => {
     console.warn(`Area Links: Could not establish connection with content script. ${error.message}`);
   });
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  switch (request.type) {
-    case "openLinks":
-      processLinks(request.urls);
-      return false;
-    case "clearHistory":
-      chrome.storage.local.set({ linkHistory: [] })
-        .then(() => sendResponse({ success: true, message: 'History cleared!' }))
-        .catch(err => sendResponse({ success: false, message: err.message }));
-      return true;
+  if (request.type === "openLinks") {
+    processLinks(request.urls);
+    return false;
+  }
+  if (request.type === "clearHistory") {
+    chrome.storage.local.set({ linkHistory: [] })
+      .then(() => sendResponse({ success: true, message: 'History cleared!' }))
+      .catch(err => sendResponse({ success: false, message: err.message }));
+    return true;
   }
   return false;
 });
 
 async function processLinks(urls) {
-  const [syncSettings, localSettings] = await Promise.all([
-      chrome.storage.sync.get(SYNC_DEFAULTS),
-      chrome.storage.local.get(LOCAL_DEFAULTS)
-  ]);
-  const settings = { ...syncSettings, ...localSettings };
+  const settings = await getSettings();
 
   const excludedDomains = settings.excludedDomains.split(',').map(d => d.trim().toLowerCase()).filter(Boolean);
   const excludedWords = settings.excludedWords.split(',').map(w => w.trim().toLowerCase()).filter(Boolean);
